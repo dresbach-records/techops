@@ -11,7 +11,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center mb-4">
-              <Image src="/logotech.png" alt="Tech Lab Logo" width={32} height={32} className="h-8 w-8" />
+              <Image src="/logotech.png" alt="Tech Lab Logo" width={300} height={300} className="h-12 w-12" />
             </Link>
             <p className="text-muted-foreground max-w-md">
               Consultoria técnica personalizada para impulsionar a inovação e o crescimento da sua empresa.
