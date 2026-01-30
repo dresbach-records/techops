@@ -10,9 +10,8 @@ export function Footer() {
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
-            <Link href="/" className="flex items-center space-x-2 mb-4">
+            <Link href="/" className="flex items-center mb-4">
               <Image src="/logotech.png" alt="Tech Lab Logo" width={24} height={24} className="h-6 w-6" />
-              <span className="font-bold text-lg font-headline">Tech Lab</span>
             </Link>
             <p className="text-muted-foreground max-w-md">
               Consultoria técnica personalizada para impulsionar a inovação e o crescimento da sua empresa.

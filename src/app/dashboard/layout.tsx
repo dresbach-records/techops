@@ -26,9 +26,8 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     const sidebarContent = (
          <>
             <SidebarHeader>
-                <Link href="/" className="flex items-center gap-2">
+                <Link href="/" className="flex items-center">
                     <Image src="/logotech.png" alt="Tech Lab Logo" width={24} height={24} className="size-6" />
-                    <span className="font-bold text-lg font-headline">Tech Lab</span>
                 </Link>
             </SidebarHeader>
             <SidebarContent>

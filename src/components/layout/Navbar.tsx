@@ -20,9 +20,8 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
         <div className="mr-4 flex items-center">
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center">
             <Image src="/logotech.png" alt="Tech Lab Logo" width={24} height={24} className="h-6 w-6" />
-            <span className="font-bold font-headline">Tech Lab</span>
           </Link>
         </div>
         <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
@@ -62,9 +61,8 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent side="left">
               <div className="flex flex-col space-y-4 p-4">
-                <Link href="/" className="flex items-center space-x-2 mb-4">
+                <Link href="/" className="flex items-center mb-4">
                     <Image src="/logotech.png" alt="Tech Lab Logo" width={24} height={24} className="h-6 w-6" />
-                    <span className="font-bold font-headline">Tech Lab</span>
                 </Link>
                 {navLinks.map((link) => (
                     <Link
