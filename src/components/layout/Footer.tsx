@@ -11,7 +11,7 @@ export function Footer() {
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center space-x-2 mb-4">
               <Rocket className="h-6 w-6 text-primary" />
-              <span className="font-bold text-lg font-headline">TechAdvisory</span>
+              <span className="font-bold text-lg font-headline">Tech Lab</span>
             </Link>
             <p className="text-muted-foreground max-w-md">
               Consultoria técnica personalizada para impulsionar a inovação e o crescimento da sua empresa.
@@ -60,7 +60,7 @@ export function Footer() {
         </div>
         <div className="mt-8 pt-8 border-t flex flex-col sm:flex-row justify-between items-center">
           <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} TechAdvisory. Todos os direitos reservados.
+            © {new Date().getFullYear()} Tech Lab. Todos os direitos reservados.
           </p>
           <div className="flex space-x-4 mt-4 sm:mt-0">
             <Link href="#" className="text-muted-foreground hover:text-primary">

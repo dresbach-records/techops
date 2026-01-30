@@ -1,4 +1,4 @@
-Plataforma de Consultoria Técnica com IA
+Tech Lab
 
 Plataforma SaaS voltada à consultoria técnica personalizada, onde clientes passam por um diagnóstico estruturado, realizam o pagamento e recebem uma área do cliente e painel personalizados, gerados conforme suas necessidades de negócio, tecnologia e maturidade técnica.
 

@@ -34,7 +34,7 @@ const testimonials = [
       image: PlaceHolderImages.find(p => p.id === 'testimonial-1')?.imageUrl || '',
       imageHint: PlaceHolderImages.find(p => p.id === 'testimonial-1')?.imageHint,
       quote:
-        "A TechAdvisory transformou nossa forma de encarar a evolução tecnológica. O diagnóstico foi preciso e o roadmap nos deu a clareza que precisávamos para escalar.",
+        "A Tech Lab transformou nossa forma de encarar a evolução tecnológica. O diagnóstico foi preciso e o roadmap nos deu a clareza que precisávamos para escalar.",
     },
     {
       name: "Ricardo Mendes",
@@ -154,7 +154,7 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold font-headline">Confiado por líderes de tecnologia</h2>
             <p className="mt-3 max-w-xl mx-auto text-muted-foreground">
-              Veja o que nossos clientes estão dizendo sobre a TechAdvisory.
+              Veja o que nossos clientes estão dizendo sobre a Tech Lab.
             </p>
           </div>
           <div className="grid gap-8 md:grid-cols-3">

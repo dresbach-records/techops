@@ -14,7 +14,7 @@ const quickLinks = [
 const recentActivity = [
     {id: 1, description: "Seu Diagnóstico Técnico foi gerado.", date: "Há 2 horas", status: "Concluído"},
     {id: 2, description: "Questionário de Desafios enviado.", date: "Há 1 dia", status: "Concluído"},
-    {id: 3, description: "Bem-vindo à TechAdvisory!", date: "Há 1 dia", status: "Info"},
+    {id: 3, description: "Bem-vindo à Tech Lab!", date: "Há 1 dia", status: "Info"},
 ]
 
 export default function DashboardPage() {

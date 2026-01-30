@@ -27,7 +27,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             <SidebarHeader>
                 <Link href="/" className="flex items-center gap-2">
                     <Rocket className="size-6 text-primary" />
-                    <span className="font-bold text-lg font-headline">TechAdvisory</span>
+                    <span className="font-bold text-lg font-headline">Tech Lab</span>
                 </Link>
             </SidebarHeader>
             <SidebarContent>

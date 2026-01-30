@@ -4,7 +4,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'TechAdvisory Platform',
+  title: 'Tech Lab Platform',
   description: 'Consultoria Técnica Personalizada para sua Empresa',
 };
 

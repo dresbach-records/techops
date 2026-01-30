@@ -21,7 +21,7 @@ export function Navbar() {
         <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center space-x-2">
             <Rocket className="h-6 w-6 text-primary" />
-            <span className="font-bold font-headline">TechAdvisory</span>
+            <span className="font-bold font-headline">Tech Lab</span>
           </Link>
         </div>
         <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
@@ -63,7 +63,7 @@ export function Navbar() {
               <div className="flex flex-col space-y-4 p-4">
                 <Link href="/" className="flex items-center space-x-2 mb-4">
                     <Rocket className="h-6 w-6 text-primary" />
-                    <span className="font-bold font-headline">TechAdvisory</span>
+                    <span className="font-bold font-headline">Tech Lab</span>
                 </Link>
                 {navLinks.map((link) => (
                     <Link

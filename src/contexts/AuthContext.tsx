@@ -31,13 +31,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem("techAdvisoryUser");
+      const storedUser = localStorage.getItem("techLabUser");
       if (storedUser) {
         setUser(JSON.parse(storedUser));
       }
     } catch (error) {
       console.error("Failed to parse user from localStorage", error);
-      localStorage.removeItem("techAdvisoryUser");
+      localStorage.removeItem("techLabUser");
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const userData = await apiLogin(email, password);
     if (userData) {
       setUser(userData);
-      localStorage.setItem("techAdvisoryUser", JSON.stringify(userData));
+      localStorage.setItem("techLabUser", JSON.stringify(userData));
       if (userData.isPaid) {
         router.push("/dashboard");
       } else {
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const newUser = await apiSignup(name, email, password);
     if (newUser) {
       setUser(newUser);
-      localStorage.setItem("techAdvisoryUser", JSON.stringify(newUser));
+      localStorage.setItem("techLabUser", JSON.stringify(newUser));
       router.push("/questionario");
     } else {
       throw new Error("Não foi possível criar a conta. Tente outro e-mail.");
@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("techAdvisoryUser");
+    localStorage.removeItem("techLabUser");
     router.push("/login");
   };
 
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       const updatedUser = { ...user, isPaid: true };
       setUser(updatedUser);
-      localStorage.setItem("techAdvisoryUser", JSON.stringify(updatedUser));
+      localStorage.setItem("techLabUser", JSON.stringify(updatedUser));
     }
   };
 
