@@ -34,7 +34,7 @@ const step2Schema = z.object({
   techStack: z.string().min(1, "Stack de tecnologia é obrigatória"),
   cloudProvider: z.string().min(1, "Provedor de nuvem é obrigatório"),
 });
-const step3Schema = z.oject({
+const step3Schema = z.object({
   mainChallenge: z.string().min(10, "Descreva seu principal desafio em pelo menos 10 caracteres"),
 });
 

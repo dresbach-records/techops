@@ -27,7 +27,7 @@ const roadmapData = [
     title: "Inovação e Expansão (6-12 Meses)",
     tasks: [
       { id: "T8", description: "Explorar arquitetura orientada a eventos com Kafka/RabbitMQ", status: "todo", priority: "media" },
-      { id:g: "T9", description: "Desenvolver painel de feature flags para lançamentos graduais", status: "todo", priority: "baixa" },
+      { id: "T9", description: "Desenvolver painel de feature flags para lançamentos graduais", status: "todo", priority: "baixa" },
     ]
   }
 ];
