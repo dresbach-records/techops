@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Rocket } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserNav } from "./UserNav";
 
@@ -20,7 +21,7 @@ export function Navbar() {
       <div className="container flex h-14 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center space-x-2">
-            <Rocket className="h-6 w-6 text-primary" />
+            <Image src="/logotech.png" alt="Tech Lab Logo" width={24} height={24} className="h-6 w-6" />
             <span className="font-bold font-headline">Tech Lab</span>
           </Link>
         </div>
@@ -62,7 +63,7 @@ export function Navbar() {
             <SheetContent side="left">
               <div className="flex flex-col space-y-4 p-4">
                 <Link href="/" className="flex items-center space-x-2 mb-4">
-                    <Rocket className="h-6 w-6 text-primary" />
+                    <Image src="/logotech.png" alt="Tech Lab Logo" width={24} height={24} className="h-6 w-6" />
                     <span className="font-bold font-headline">Tech Lab</span>
                 </Link>
                 {navLinks.map((link) => (

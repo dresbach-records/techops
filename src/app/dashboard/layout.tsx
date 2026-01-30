@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from 'next/navigation';
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { Rocket, LayoutDashboard, ClipboardCheck, GitFork, FileText, MessageSquare, PanelLeft } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, GitFork, FileText, MessageSquare, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserNav } from "@/components/layout/UserNav";
 import { ChatWidget } from "@/components/layout/ChatWidget";
@@ -26,7 +27,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
          <>
             <SidebarHeader>
                 <Link href="/" className="flex items-center gap-2">
-                    <Rocket className="size-6 text-primary" />
+                    <Image src="/logotech.png" alt="Tech Lab Logo" width={24} height={24} className="size-6" />
                     <span className="font-bold text-lg font-headline">Tech Lab</span>
                 </Link>
             </SidebarHeader>

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Rocket, Twitter, Linkedin, Github } from "lucide-react";
+import Image from "next/image";
+import { Twitter, Linkedin, Github } from "lucide-react";
 
 export function Footer() {
   return (
@@ -10,7 +11,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center space-x-2 mb-4">
-              <Rocket className="h-6 w-6 text-primary" />
+              <Image src="/logotech.png" alt="Tech Lab Logo" width={24} height={24} className="h-6 w-6" />
               <span className="font-bold text-lg font-headline">Tech Lab</span>
             </Link>
             <p className="text-muted-foreground max-w-md">
