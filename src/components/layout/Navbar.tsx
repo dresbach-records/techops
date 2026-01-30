@@ -21,7 +21,7 @@ export function Navbar() {
       <div className="container flex h-14 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center">
-            <Image src="/logotech.png" alt="Tech Lab Logo" width={24} height={24} className="h-6 w-6" />
+            <Image src="/logotech.png" alt="Tech Lab Logo" width={32} height={32} className="h-8 w-8" />
           </Link>
         </div>
         <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
@@ -62,7 +62,7 @@ export function Navbar() {
             <SheetContent side="left">
               <div className="flex flex-col space-y-4 p-4">
                 <Link href="/" className="flex items-center mb-4">
-                    <Image src="/logotech.png" alt="Tech Lab Logo" width={24} height={24} className="h-6 w-6" />
+                    <Image src="/logotech.png" alt="Tech Lab Logo" width={32} height={32} className="h-8 w-8" />
                 </Link>
                 {navLinks.map((link) => (
                     <Link
