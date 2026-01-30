@@ -1,3 +1,70 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero",
+      "description": "Abstract technology background for hero section",
+      "imageUrl": "https://images.unsplash.com/photo-1626908013351-800ddd734b8a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8YWJzdHJhY3QlMjB0ZWNobm9sb2d5fGVufDB8fHx8MTc2OTcwNTMwOXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract technology"
+    },
+    {
+      "id": "feature-1",
+      "description": "Icon representing a technical diagnosis",
+      "imageUrl": "https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjaXJjdWl0JTIwYm9hcmR8ZW58MHx8fHwxNzY5ODE0Njc3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "circuit board"
+    },
+    {
+      "id": "feature-2",
+      "description": "Icon representing a technology roadmap",
+      "imageUrl": "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxkYXRhJTIwdmlzdWFsaXphdGlvbnxlbnwwfHx8fDE3Njk3NDI4OTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "data visualization"
+    },
+    {
+      "id": "feature-3",
+      "description": "Icon representing personalized consulting",
+      "imageUrl": "https://picsum.photos/seed/feature3/400/300",
+      "imageHint": "team meeting"
+    },
+    {
+      "id": "how-it-works-step-1",
+      "description": "Image for the first step of the process",
+      "imageUrl": "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxkYXRhJTIwZW50cnl8ZW58MHx8fHwxNzY5ODE0Njc3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "data entry"
+    },
+    {
+      "id": "how-it-works-step-2",
+      "description": "Image for the second step of the process",
+      "imageUrl": "https://images.unsplash.com/photo-1738996747326-65b5d7d7fe9b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhbmFseXNpcyUyMGdyYXBofGVufDB8fHx8MTc2OTgxNDY3N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "analysis graph"
+    },
+    {
+      "id": "how-it-works-step-3",
+      "description": "Image for the third step of the process",
+      "imageUrl": "https://images.unsplash.com/photo-1693829956906-cfad6690fee6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8c29sdXRpb24lMjBhcmNoaXRlY3R1cmV8ZW58MHx8fHwxNzY5ODE0Njc3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "solution architecture"
+    },
+    {
+      "id": "testimonial-1",
+      "description": "Avatar for a testimonial provider",
+      "imageUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cHJvZmVzc2lvbmFsJTIwaGVhZHNob3R8ZW58MHx8fHwxNzY5NzkwNDkxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "professional headshot"
+    },
+    {
+      "id": "testimonial-2",
+      "description": "Avatar for a testimonial provider",
+      "imageUrl": "https://images.unsplash.com/photo-1595211877493-41a4e5f236b3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdHxlbnwwfHx8fDE3Njk3OTA0OTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "professional headshot"
+    },
+    {
+      "id": "testimonial-3",
+      "description": "Avatar for a testimonial provider",
+      "imageUrl": "https://images.unsplash.com/photo-1595211877493-41a4e5f236b3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdHxlbnwwfHx8fDE3Njk3OTA0OTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "professional headshot"
+    },
+    {
+      "id": "login-background",
+      "description": "Abstract background for the login page",
+      "imageUrl": "https://images.unsplash.com/photo-1572756317709-fe9c15ced298?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxnZW9tZXRyaWMlMjBwYXR0ZXJufGVufDB8fHx8MTc2OTcxNTI2Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "geometric pattern"
+    }
+  ]
 }
