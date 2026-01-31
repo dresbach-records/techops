@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import type { DiagnosticData } from "./DiagnosticContext";
 import { getContractText } from "@/lib/contract";
+import type { Plan } from "@/types";
 
 interface AuthContextType {
   user: AppUser | null;
@@ -19,7 +20,7 @@ interface AuthContextType {
   isPaid: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signUp: (diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto') => Promise<void>;
+  signUp: (diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto', plan: Plan) => Promise<void>;
   logout: () => void;
   setPaymentSuccess: () => void;
 }
@@ -42,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: session.user.user_metadata?.name || "Usuário",
           isPaid: session.user.user_metadata?.isPaid || false,
           payment_pending_boleto: session.user.user_metadata?.payment_pending_boleto || false,
+          plan: session.user.user_metadata?.plan,
         };
         setUser(appUser);
         if (appUser.isPaid) {
@@ -66,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // O onAuthStateChange cuidará do redirecionamento
   };
 
-  const signUp = async (diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto') => {
+  const signUp = async (diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto', plan: Plan) => {
     const email = diagnosticData.contato?.email;
     const password = diagnosticData.seguranca?.senha;
     const name = diagnosticData.pessoa?.nome;
@@ -83,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: name,
           isPaid: true, // Libera acesso ao dashboard em ambos os casos
           payment_pending_boleto: paymentMethod === 'boleto',
+          plan: plan.key,
         },
       },
     });
@@ -106,6 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         expectativa: projeto.expectativa,
         metodo_pagamento: paymentMethod,
         status_pagamento: paymentMethod === 'card' ? 'pago' : 'pendente',
+        plano_recomendado: plan.key,
+        plano_setup_fee: plan.setupFee,
+        plano_monthly_fee: plan.monthlyFee,
     };
 
     // Salva os dados do diagnóstico na tabela 'diagnosticos'
@@ -170,6 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 name: data.user.user_metadata?.name || "Usuário",
                 isPaid: data.user.user_metadata?.isPaid || false,
                 payment_pending_boleto: data.user.user_metadata?.payment_pending_boleto || false,
+                plan: data.user.user_metadata?.plan,
             };
             setUser(appUser);
         }

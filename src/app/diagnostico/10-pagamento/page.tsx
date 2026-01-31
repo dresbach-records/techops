@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Loader2, ChevronLeft, FileDown } from "lucide-react";
-import { useState } from "react";
+import { CreditCard, Loader2, ChevronLeft, FileDown, Info } from "lucide-react";
+import { useState, useMemo } from "react";
 import { useDiagnostic } from "@/contexts/DiagnosticContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
@@ -29,22 +29,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { Plan } from "@/types";
+import { calculatePlan, calculateInstallments } from "@/lib/plan-calculator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-const invoiceItems = [
-  {
-    service: "Diagnóstico Técnico e Plataforma",
-    details: "Acesso completo e análise inicial",
-    price: 999.0,
-  },
-  {
-    service: "Desconto de Lançamento",
-    details: "Cupom: STARTUP2026",
-    price: -100.0,
-  },
-];
-const total = invoiceItems.reduce((acc, item) => acc + item.price, 0);
 
-function ExtratoDialogContent() {
+function ExtratoDialogContent({ plan }: { plan: Plan }) {
     const { toast } = useToast();
 
     const handleDownloadPdf = () => {
@@ -53,6 +45,13 @@ function ExtratoDialogContent() {
           description: "O seu extrato em PDF está sendo gerado e o download começará em breve.",
         });
     };
+
+    const invoiceItems = [
+        { service: "Taxa de Setup", details: `Setup e configuração do plano ${plan.key}`, price: plan.setupFee },
+        ...(plan.monthlyFee > 0 ? [{ service: `Primeira Mensalidade`, details: `Referente ao plano ${plan.key}`, price: plan.monthlyFee }] : [])
+    ];
+    const total = invoiceItems.reduce((acc, item) => acc + item.price, 0);
+
 
     return (
         <DialogContent className="max-w-lg p-0">
@@ -107,15 +106,6 @@ function ExtratoDialogContent() {
             </div>
             <DialogFooter className="bg-muted/50 p-6 rounded-b-lg">
                 <div className="grid gap-2 text-right w-full max-w-xs ml-auto">
-                    <div className="flex justify-between items-center gap-4">
-                        <p className="font-semibold">Subtotal</p>
-                        <p>{(total - invoiceItems.find(item => item.price < 0)!.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
-                    </div>
-                    <div className="flex justify-between items-center gap-4">
-                        <p className="font-semibold text-destructive">Descontos</p>
-                        <p className="text-destructive">{invoiceItems.find(item => item.price < 0)!.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
-                    </div>
-                    <Separator className="my-2" />
                     <div className="flex justify-between items-center gap-4">
                         <p className="text-lg font-bold">Total a Pagar</p>
                         <p className="text-lg font-bold">
@@ -213,11 +203,18 @@ export default function PaymentPage() {
   const { data: diagnosticData, resetData } = useDiagnostic();
   const { signUp } = useAuth();
   const [isLoading, setIsLoading] = useState<'card' | 'boleto' | null>(null);
+  const [selectedInstallment, setSelectedInstallment] = useState('1');
+
+  const recommendedPlan = useMemo(() => calculatePlan(diagnosticData), [diagnosticData]);
+
+  const totalValue = recommendedPlan.setupFee + (recommendedPlan.monthlyFee > 0 ? recommendedPlan.monthlyFee : 0);
+  const installmentOptions = useMemo(() => calculateInstallments(totalValue), [totalValue]);
+  const currentInstallment = installmentOptions.find(i => i.num === parseInt(selectedInstallment, 10));
 
   const handlePayment = async (method: 'card' | 'boleto') => {
     setIsLoading(method);
     try {
-        await signUp(diagnosticData, method);
+        await signUp(diagnosticData, method, recommendedPlan);
         
         toast({
             title: "Conta criada com sucesso!",
@@ -244,47 +241,58 @@ export default function PaymentPage() {
           <div className="mx-auto bg-primary text-primary-foreground rounded-full h-12 w-12 flex items-center justify-center mb-4">
             <CreditCard className="h-6 w-6" />
           </div>
-          <CardTitle className="font-headline text-2xl">Último Passo!</CardTitle>
-          <CardDescription>Escolha como finalizar a contratação do seu diagnóstico.</CardDescription>
+          <CardTitle className="font-headline text-2xl">Plano Recomendado</CardTitle>
+          <CardDescription>Com base em suas respostas, este é o plano ideal para você.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 min-h-[250px] px-8">
-            <div className="rounded-lg border bg-card p-4">
+            <Alert>
+                <Info className="h-4 w-4" />
+                <AlertTitle className="font-bold">{recommendedPlan.name}</AlertTitle>
+                <AlertDescription>
+                    {recommendedPlan.description}
+                </AlertDescription>
+            </Alert>
+            
+            <div className="rounded-lg border bg-card p-4 space-y-4">
                 <div className="flex justify-between items-center">
                     <div>
-                        <p className="font-semibold">Plano Profissional</p>
-                        <p className="text-sm text-muted-foreground">Diagnóstico e Acesso à Plataforma</p>
+                        <p className="font-semibold">Valor Total Inicial</p>
+                        <p className="text-sm text-muted-foreground">Setup + 1ª mensalidade (se aplicável)</p>
                     </div>
-                    <p className="font-bold text-lg">R$ 999,00</p>
+                    <p className="font-bold text-lg">{totalValue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="installments">Pagamento em até 12x no cartão</Label>
+                    <Select onValueChange={setSelectedInstallment} defaultValue={selectedInstallment}>
+                        <SelectTrigger id="installments">
+                            <SelectValue placeholder="Selecione o número de parcelas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {installmentOptions.map(opt => (
+                                <SelectItem key={opt.num} value={String(opt.num)}>{opt.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                     <p className="text-xs text-muted-foreground text-right">
+                        Total com juros: {currentInstallment?.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    </p>
                 </div>
             </div>
             
             <div className="space-y-4">
                 <Button onClick={() => handlePayment('card')} disabled={!!isLoading} className="w-full h-12">
-                    {isLoading === 'card' ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Processando...
-                        </>
-                    ) : (
-                        "Pagar com Cartão de Crédito"
-                    )}
+                    {isLoading === 'card' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Pagar com Cartão de Crédito
                 </Button>
                 <Button onClick={() => handlePayment('boleto')} disabled={!!isLoading} variant="secondary" className="w-full h-12">
-                    {isLoading === 'boleto' ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Processando...
-                        </>
-                    ) : (
-                       "Gerar Boleto e Pagar Depois"
-                    )}
+                    {isLoading === 'boleto' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Gerar Boleto e Pagar Depois
                 </Button>
             </div>
 
             <div className="text-center text-xs text-muted-foreground px-4">
-                Ao clicar em uma das opções de pagamento, você cria sua conta, concorda com
-                nossos <TermsOfServiceModal /> e
-                assina o contrato de prestação de serviços que será enviado para seu e-mail.
+                Ao prosseguir, você cria sua conta, concorda com nossos <TermsOfServiceModal /> e assina o contrato de serviços.
             </div>
 
             <div className="text-center text-sm">
@@ -294,7 +302,7 @@ export default function PaymentPage() {
                       Ver extrato detalhado da cobrança
                   </button>
                 </DialogTrigger>
-                <ExtratoDialogContent />
+                <ExtratoDialogContent plan={recommendedPlan} />
               </Dialog>
             </div>
             
