@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"techlab/backend-go/internal/email"
+	"techlab/backend-go/internal/pagamento"
 	"techlab/backend-go/internal/whatsapp"
 	"time"
 
@@ -76,6 +77,8 @@ func NewServer(db *sql.DB) *gin.Engine {
 		if emailSvc != nil {
 			v1.POST("/send-email", email.SendEmailHandler(emailSvc))
 		}
+
+		v1.POST("/payments/boleto", pagamento.GenerateBoletoHandler())
 	}
 
 	return router

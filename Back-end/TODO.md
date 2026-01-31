@@ -123,19 +123,19 @@ Endpoints
 
 Objetivo: nada libera sem pagamento.
 
- Integração (Asaas / Stripe / Pix)
+ Integração (Asaas)
 
- Webhook seguro
+ Webhook seguro (próximo passo)
 
- Estados: pendente, pago, falhou
+ Estados via Asaas: PENDING, CONFIRMED, FAILED
 
-Modelos
+Modelos (AsaasCustomer, AsaasPayment)
 
  pagamentos
 
 Endpoints
 
- POST /pagamentos/create
+ POST /pagamentos/boleto
 
  POST /webhooks/pagamentos
 
