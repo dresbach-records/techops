@@ -11,8 +11,8 @@ import { UserNav } from "./UserNav";
 const navLinks = [
   { href: "/como-funciona", label: "Como Funciona" },
   { href: "/planos", label: "Planos" },
-  { href: "#", label: "Consultoria" },
-  { href: "#", label: "Tech Ops" },
+  { href: "#consultoria", label: "Consultoria" },
+  { href: "#tech-ops", label: "Tech Ops" },
 ];
 
 export function Navbar() {

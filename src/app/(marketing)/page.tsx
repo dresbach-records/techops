@@ -70,8 +70,8 @@ export default function HomePage() {
       <section className="py-20 md:py-24 bg-card">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid gap-8 md:grid-cols-3">
-            {features.map((feature, index) => (
-              <Card key={index} className="flex flex-col items-start text-left p-6 border-none shadow-none bg-transparent">
+            {features.map((feature) => (
+              <Card key={feature.title} className="flex flex-col items-start text-left p-6 border-none shadow-none bg-transparent">
                 <div className="mb-4">{feature.icon}</div>
                 <CardTitle className="mb-2 font-headline text-xl">{feature.title}</CardTitle>
                 <p className="text-muted-foreground">{feature.description}</p>
@@ -94,8 +94,8 @@ export default function HomePage() {
                 </svg>
             </div>
             <div className="grid gap-8 md:grid-cols-3">
-                {howItWorksSteps.map((step, index) => (
-                <div key={index} className="flex items-start gap-4">
+                {howItWorksSteps.map((step) => (
+                <div key={step.step} className="flex items-start gap-4">
                     <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground font-bold text-2xl font-headline border-4 border-background flex-shrink-0">
                     {step.step}
                     </div>
