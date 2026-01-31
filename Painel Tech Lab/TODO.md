@@ -1,5 +1,6 @@
 🧭 PAINEL DA EMPRESA — TECH LAB (INTERNO)
-
+regra tudo e componente deve estar e pasta coponenete imporados  e rodape e cabeçalho nao sao do site  so novos proprios e logim nao evai no site e acessado de /
+login-adm
 Este painel não é do cliente.
 É o painel da Tech Lab, usado pela equipe para operar, analisar, decidir e escalar.
 
