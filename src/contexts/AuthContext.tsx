@@ -1,6 +1,6 @@
 "use client";
 
-import type { User } from "@/types";
+import type { AppUser } from "@/types";
 import {
   createContext,
   useContext,
@@ -9,57 +9,110 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-
-// Mock API calls
-// The previous apiLogin and apiSignup are removed as the flow has changed.
-// A new function will be needed to register the user after the diagnostic.
+import { supabase } from "@/lib/supabase/client";
+import type { DiagnosticData } from "./DiagnosticContext";
 
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   isAuthenticated: boolean;
   isPaid: boolean;
   loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  signUp: (diagnosticData: DiagnosticData) => Promise<void>;
   logout: () => void;
-  setPaymentSuccess: () => void;
-  // A new method to create user from diagnostic will be added here
-  // e.g., completeDiagnosticAndLogin: (userData) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    // This part remains to keep the user logged in across sessions
-    try {
-      const storedUser = localStorage.getItem("techLabUser");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const appUser: AppUser = {
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata?.name || "Usuário",
+          isPaid: session.user.user_metadata?.isPaid || false,
+        };
+        setUser(appUser);
+        if (appUser.isPaid) {
+          router.push("/dashboard");
+        } else {
+          router.push("/pagamento");
+        }
+      } else {
+        setUser(null);
       }
-    } catch (error) {
-      console.error("Failed to parse user from localStorage", error);
-      localStorage.removeItem("techLabUser");
-    } finally {
       setLoading(false);
-    }
-  }, []);
+    });
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("techLabUser");
-    localStorage.removeItem("diagnosticData"); // Clear diagnostic data on logout
-    router.push("/");
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [router]);
+
+  const login = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    // O onAuthStateChange cuidará do redirecionamento
   };
 
-  const setPaymentSuccess = () => {
-    if (user) {
-      const updatedUser = { ...user, isPaid: true };
-      setUser(updatedUser);
-      localStorage.setItem("techLabUser", JSON.stringify(updatedUser));
+  const signUp = async (diagnosticData: DiagnosticData) => {
+    const email = diagnosticData.contato?.email;
+    const password = diagnosticData.seguranca?.senha;
+    const name = diagnosticData.pessoa?.nome;
+
+    if (!email || !password || !name) {
+      throw new Error("Email, senha e nome são obrigatórios para o cadastro.");
     }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name: name,
+          isPaid: true, // Pagamento é simulado e acesso liberado
+        },
+      },
+    });
+
+    if (error) throw error;
+    if (!data.user) throw new Error("Cadastro falhou, usuário não retornado.");
+
+    // Salva os dados do diagnóstico na tabela 'diagnosticos'
+    const { error: insertError } = await supabase.from("diagnosticos").insert({
+      user_id: data.user.id,
+      ...diagnosticData,
+    });
+
+    if (insertError) {
+      // Em um app real, seria importante ter uma estratégia de rollback aqui.
+      // Por agora, apenas notificamos o erro.
+      console.error("Erro ao salvar diagnóstico:", insertError);
+      throw new Error(
+        "Sua conta foi criada, mas houve um erro ao salvar seu diagnóstico. Por favor, contate o suporte."
+      );
+    }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    router.push("/");
+  };
+  
+  // Função dummy para compatibilidade, o fluxo mudou.
+  const setPaymentSuccess = () => {
+     if (user) {
+        supabase.auth.updateUser({ data: { isPaid: true } });
+     }
   };
 
   const isAuthenticated = !!user;
@@ -72,8 +125,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         isPaid,
         loading,
+        login,
+        signUp,
         logout,
-        setPaymentSuccess,
       }}
     >
       {children}

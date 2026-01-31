@@ -51,15 +51,12 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await login(values.email, values.password);
-      toast({
-        title: "Login bem-sucedido!",
-        description: "Redirecionando para sua dashboard...",
-      });
+      // O redirecionamento será feito pelo AuthContext
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro no Login",
-        description: error instanceof Error ? error.message : "Ocorreu um erro desconhecido.",
+        description: error instanceof Error ? error.message : "E-mail ou senha inválidos.",
       });
       setIsLoading(false);
     }
@@ -111,8 +108,8 @@ export default function LoginPage() {
             </Form>
             <div className="mt-4 text-center text-sm">
               Não tem uma conta?{" "}
-              <Link href="/cadastro" className="underline">
-                Cadastre-se
+              <Link href="/diagnostico" className="underline">
+                Inicie o diagnóstico
               </Link>
             </div>
           </CardContent>

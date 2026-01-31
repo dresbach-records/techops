@@ -4,48 +4,42 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, CheckCircle, Loader2 } from "lucide-react";
+import { CreditCard, CheckCircle, Loader2, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 import { useDiagnostic } from "@/contexts/DiagnosticContext";
-import { submitDiagnosticAndCreateUser } from "@/lib/api";
-import { StepNavigation } from "@/components/diagnostico/StepNavigation";
 import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
 
 
 export default function PaymentPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { data: diagnosticData, resetData } = useDiagnostic();
-  const { setPaymentSuccess } = useAuth() // This will need to be adapted to log the user in
+  const { signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePayment = async () => {
     setIsLoading(true);
     try {
-        // In a real app, you would call the payment provider first.
-        // Here, we simulate creating the user and payment together.
-        const user = await submitDiagnosticAndCreateUser(diagnosticData);
+        // Cria o usuário no Supabase Auth e salva os dados do diagnóstico
+        await signUp(diagnosticData);
         
-        // This is a simplified login. In a real app, you would set a token.
-        localStorage.setItem("techLabUser", JSON.stringify(user));
-
         toast({
-            title: "Pagamento confirmado!",
+            title: "Conta criada e pagamento confirmado!",
             description: "Seu painel personalizado está sendo preparado.",
         });
 
-        resetData(); // Clear diagnostic data from localStorage
+        resetData(); // Limpa os dados do diagnóstico do localStorage
         
-        // A small delay to simulate dashboard setup
-        setTimeout(() => {
-             router.push("/dashboard");
-        }, 1000);
+        // O AuthContext irá redirecionar para o dashboard automaticamente após o login
+        // A pequena simulação de atraso foi removida pois o fluxo agora é real.
+        // router.push("/dashboard");
 
     } catch (error) {
         toast({
             variant: "destructive",
             title: "Erro no Processamento",
-            description: error instanceof Error ? error.message : "Ocorreu um erro desconhecido.",
+            description: error instanceof Error ? error.message : "Não foi possível criar sua conta. Verifique os dados e tente novamente.",
         });
         setIsLoading(false);
     }
