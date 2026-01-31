@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -15,7 +16,7 @@ import (
 )
 
 // NewServer creates and configures a new Gin server.
-func NewServer() *gin.Engine {
+func NewServer(db *sql.DB) *gin.Engine {
 	// Set Gin to release mode for production, or debug mode.
 	if gin.Mode() == gin.ReleaseMode {
 		gin.SetMode(gin.ReleaseMode)
@@ -40,8 +41,16 @@ func NewServer() *gin.Engine {
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
+		// Check database connection
+		dbStatus := "ok"
+		if err := db.Ping(); err != nil {
+			dbStatus = "down"
+			log.Printf("ERROR: Database health check failed: %v", err)
+		}
+
 		c.JSON(http.StatusOK, gin.H{
 			"status": "UP",
+			"db":     dbStatus,
 		})
 	})
 

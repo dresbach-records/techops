@@ -13,14 +13,14 @@ func main() {
 	config.LoadEnv("Back-end/.env")
 
 	// Initialize database connection
-	database, err := db.NewPostgresDB()
+	database, err := db.Connect()
 	if err != nil {
-		log.Fatalf("could not connect to the database: %v", err)
+		log.Fatalf("DB connection failed: %v", err)
 	}
 	defer database.Close()
 
-	// Create a new server
-	srv := server.NewServer()
+	// Create a new server, passing the database connection
+	srv := server.NewServer(database)
 
 	// Get port from environment or use default
 	port := os.Getenv("API_PORT")
