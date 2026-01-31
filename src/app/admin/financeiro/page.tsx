@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DollarSign, CreditCard, Users, Download } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-
 
 const overviewCards = [
     { title: "Faturamento (MRR)", value: "R$ 15.872,00", description: "+5.2% vs. mês anterior", icon: <DollarSign /> },
@@ -63,14 +61,9 @@ export default function FinanceiroPage() {
                 <CardTitle>Crescimento do Faturamento Mensal Recorrente (MRR)</CardTitle>
               </CardHeader>
               <CardContent>
-                 <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={mrrData}>
-                        <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false}/>
-                        <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `R$${Number(value) / 1000}k`}/>
-                        <Tooltip cursor={{fill: 'hsla(var(--muted))'}} contentStyle={{ fontSize: '12px', borderRadius: '0.5rem' }}/>
-                        <Bar dataKey="value" name="MRR" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                </ResponsiveContainer>
+                 <div className="h-[300px] w-full flex items-center justify-center bg-muted/50 rounded-lg">
+                    <p className="text-muted-foreground text-sm">[Gráfico de MRR temporariamente desativado para diagnóstico]</p>
+                </div>
               </CardContent>
           </Card>
           <Card className="lg:col-span-2">
