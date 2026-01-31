@@ -55,7 +55,7 @@ export default function HomePage() {
             </p>
             <div className="mt-8 flex justify-center gap-4">
                 <Button size="lg" asChild>
-                    <Link href="/cadastro">Iniciar diagnóstico técnico</Link>
+                    <Link href="/diagnostico">Iniciar diagnóstico técnico</Link>
                 </Button>
             </div>
             <div className="mt-4">
@@ -139,7 +139,7 @@ export default function HomePage() {
             </h2>
             <div className="mt-8 flex justify-center">
                 <Button size="lg" asChild>
-                    <Link href="/cadastro">Iniciar diagnóstico técnico</Link>
+                    <Link href="/diagnostico">Iniciar diagnóstico técnico</Link>
                 </Button>
             </div>
         </div>

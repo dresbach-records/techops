@@ -11,8 +11,6 @@ import { UserNav } from "./UserNav";
 const navLinks = [
   { href: "/como-funciona", label: "Como Funciona" },
   { href: "/planos", label: "Planos" },
-  { href: "#consultoria", label: "Consultoria" },
-  { href: "#tech-lab", label: "Tech Lab" },
 ];
 
 export function Navbar() {
@@ -29,7 +27,7 @@ export function Navbar() {
         <nav className="hidden items-center space-x-6 text-sm font-medium md:flex flex-1 justify-center">
           {navLinks.map((link) => (
             <Link
-              key={link.label}
+              key={link.href}
               href={link.href}
               className="transition-colors hover:text-foreground/80 text-foreground/60"
             >
@@ -48,11 +46,8 @@ export function Navbar() {
                 </>
             ) : (
               <>
-                <Button variant="ghost" asChild>
-                  <Link href="/login">Login</Link>
-                </Button>
                 <Button asChild>
-                  <Link href="/cadastro">Começar diagnóstico</Link>
+                  <Link href="/diagnostico">Iniciar diagnóstico</Link>
                 </Button>
               </>
             )}
@@ -73,7 +68,7 @@ export function Navbar() {
                 </Link>
                 {navLinks.map((link) => (
                     <Link
-                    key={link.label}
+                    key={link.href}
                     href={link.href}
                     className="text-lg font-medium"
                     >
@@ -88,11 +83,8 @@ export function Navbar() {
                         </div>
                     ) : (
                     <div className="flex flex-col space-y-2">
-                        <Button variant="ghost" asChild>
-                            <Link href="/login">Login</Link>
-                        </Button>
                         <Button asChild>
-                            <Link href="/cadastro">Começar diagnóstico</Link>
+                            <Link href="/diagnostico">Iniciar diagnóstico</Link>
                         </Button>
                     </div>
                     )}

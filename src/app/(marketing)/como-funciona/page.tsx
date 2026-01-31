@@ -81,7 +81,7 @@ export default function HowItWorksPage() {
         </p>
         <div className="mt-6">
           <Button size="lg" asChild>
-            <Link href="/cadastro">
+            <Link href="/diagnostico">
               Iniciar Diagnóstico Gratuito <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>

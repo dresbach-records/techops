@@ -88,7 +88,7 @@ export default function PlansPage() {
             </CardContent>
             <CardFooter>
               <Button className="w-full" variant={plan.popular ? "default" : "outline"} asChild>
-                <Link href="/cadastro">{plan.cta}</Link>
+                <Link href="/diagnostico">{plan.cta}</Link>
               </Button>
             </CardFooter>
           </Card>

@@ -89,10 +89,12 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     );
 }
 
+// The AuthGuard will be re-enabled once the new authentication flow is complete.
+// For now, we allow access to the dashboard to facilitate development.
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
-        <AuthGuard access="paid">
+        // <AuthGuard access="paid">
             <DashboardLayoutContent>{children}</DashboardLayoutContent>
-        </AuthGuard>
+        // </AuthGuard>
     );
 }

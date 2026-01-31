@@ -9,17 +9,20 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { login as apiLogin, signup as apiSignup } from "@/lib/api";
+
+// Mock API calls
+// The previous apiLogin and apiSignup are removed as the flow has changed.
+// A new function will be needed to register the user after the diagnostic.
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isPaid: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   setPaymentSuccess: () => void;
+  // A new method to create user from diagnostic will be added here
+  // e.g., completeDiagnosticAndLogin: (userData) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    // This part remains to keep the user logged in across sessions
     try {
       const storedUser = localStorage.getItem("techLabUser");
       if (storedUser) {
@@ -43,36 +47,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const userData = await apiLogin(email, password);
-    if (userData) {
-      setUser(userData);
-      localStorage.setItem("techLabUser", JSON.stringify(userData));
-      if (userData.isPaid) {
-        router.push("/dashboard");
-      } else {
-        router.push("/questionario");
-      }
-    } else {
-      throw new Error("Credenciais inválidas. Por favor, tente novamente.");
-    }
-  };
-
-  const signUp = async (name: string, email: string, password: string) => {
-    const newUser = await apiSignup(name, email, password);
-    if (newUser) {
-      setUser(newUser);
-      localStorage.setItem("techLabUser", JSON.stringify(newUser));
-      router.push("/questionario");
-    } else {
-      throw new Error("Não foi possível criar a conta. Tente outro e-mail.");
-    }
-  };
-
   const logout = () => {
     setUser(null);
     localStorage.removeItem("techLabUser");
-    router.push("/login");
+    localStorage.removeItem("diagnosticData"); // Clear diagnostic data on logout
+    router.push("/");
   };
 
   const setPaymentSuccess = () => {
@@ -93,8 +72,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         isPaid,
         loading,
-        login,
-        signUp,
         logout,
         setPaymentSuccess,
       }}

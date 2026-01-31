@@ -1,53 +1,34 @@
 import type { User } from "@/types";
+import { DiagnosticData } from "@/contexts/DiagnosticContext";
 
-// Mock API calls
+// The old login/signup mocks are removed.
+// The new flow will require a different API structure.
 
-export const login = (email: string, password: string): Promise<User | null> => {
+/**
+ * Mocks the final submission of the diagnostic data,
+ * user creation, and payment simulation.
+ * In a real application, this would be multiple, secure API calls.
+ */
+export const submitDiagnosticAndCreateUser = (data: DiagnosticData): Promise<User> => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-      if (email === "pago@test.com" && password === "password") {
-        resolve({
-          id: "1",
-          name: "Usuário Pago",
-          email: "pago@test.com",
-          isPaid: true,
-        });
-      } else if (email === "naopago@test.com" && password === "password") {
-        resolve({
-          id: "2",
-          name: "Usuário Não Pago",
-          email: "naopago@test.com",
-          isPaid: false,
-        });
-      } else {
-        reject(new Error("Invalid credentials"));
+      console.log("Submitting diagnostic and creating user:", data);
+      
+      if (!data.contato.email || !data.seguranca.senha || !data.pessoa.nome) {
+        reject(new Error("Informações essenciais para o cadastro estão faltando."));
+        return;
       }
-    }, 1000);
+
+      // Simulate user creation
+      const newUser: User = {
+        id: Math.random().toString(36).substring(7),
+        name: data.pessoa.nome,
+        email: data.contato.email,
+        isPaid: true, // Simulate successful payment
+      };
+      
+      console.log("User created and payment processed:", newUser);
+      resolve(newUser);
+    }, 1500);
   });
 };
-
-export const signup = (name: string, email: string, password: string): Promise<User | null> => {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            if(email.includes('test.com')) {
-                 resolve({
-                    id: Math.random().toString(36).substring(7),
-                    name: name,
-                    email: email,
-                    isPaid: false,
-                });
-            } else {
-                reject(new Error("This email is already taken"));
-            }
-        }, 1000);
-    });
-}
-
-export const submitQuestionnaire = (data: any): Promise<{ success: boolean }> => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            console.log("Questionnaire data submitted:", data);
-            resolve({ success: true });
-        }, 1500);
-    });
-}
