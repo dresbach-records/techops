@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import type { DiagnosticData } from "./DiagnosticContext";
 import type { Plan } from "@/types";
+import { getContractText } from "@/lib/contract";
 
 interface AuthContextType {
   user: AppUser | null;
@@ -117,12 +118,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error: insertError } = await supabase.from("diagnosticos").insert([diagnosticRecord]);
 
     if (insertError) {
-      // Em um app real, seria importante ter uma estratégia de rollback aqui.
-      // Por agora, apenas notificamos o erro.
-      console.error("Erro ao salvar diagnóstico:", insertError);
-      throw new Error(
-        "Sua conta foi criada, mas houve um erro ao salvar seu diagnóstico. Por favor, contate o suporte."
-      );
+        console.error("Erro ao salvar diagnóstico:", insertError);
+        throw new Error("Sua conta foi criada, mas houve um erro ao salvar seu diagnóstico. Por favor, contate o suporte.");
+    }
+    
+    // Send contract email via backend
+    try {
+        const contractHtml = getContractText(name).replace(/\n/g, '<br />');
+        await fetch('http://localhost:8080/v1/send-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                to: email,
+                subject: `Seu contrato com a Tech Lab`,
+                html: `<p>Olá ${name},</p><p>Obrigado por se juntar à Tech Lab! Conforme nossos termos, seu cadastro confirma a aceitação do nosso contrato de serviços.</p><hr />${contractHtml}`
+            }),
+        });
+    } catch (emailError) {
+        console.error("Failed to send contract email:", emailError);
+        // We don't throw an error here, as the main signup was successful.
+        // In a real app, this might be queued for a retry.
     }
   };
 

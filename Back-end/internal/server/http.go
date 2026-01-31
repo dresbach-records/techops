@@ -3,7 +3,9 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"techlab/backend-go/internal/email"
 	"techlab/backend-go/internal/whatsapp"
 	"time"
 
@@ -18,14 +20,14 @@ func NewServer() *gin.Engine {
 	if gin.Mode() == gin.ReleaseMode {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	
+
 	router := gin.New()
 
 	// Middlewares
 	router.Use(gin.Recovery()) // Recover from any panics
 	router.Use(LoggerMiddleware())
 	router.Use(RequestIDMiddleware())
-	
+
 	// CORS configuration
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"}, // In production, restrict this
@@ -47,6 +49,12 @@ func NewServer() *gin.Engine {
 	router.GET("/webhooks/whatsapp", whatsapp.VerifyWebhook)
 	router.POST("/webhooks/whatsapp", whatsapp.ReceiveWebhook)
 
+	// Initialize email service
+	emailSvc, err := email.NewResendService()
+	if err != nil {
+		// We don't want to kill the server if email fails to init, just log it.
+		log.Printf("WARNING: Could not initialize email service: %v. Emails will be simulated.", err)
+	}
 
 	// API versioning group
 	v1 := router.Group("/v1")
@@ -55,6 +63,10 @@ func NewServer() *gin.Engine {
 		v1.GET("/placeholder", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"message": "API v1 is working"})
 		})
+
+		if emailSvc != nil {
+			v1.POST("/send-email", email.SendEmailHandler(emailSvc))
+		}
 	}
 
 	return router
