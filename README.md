@@ -1,4 +1,5 @@
-Tech Lab
+md
+# Tech Lab
 
 Plataforma SaaS voltada à consultoria técnica personalizada, onde clientes passam por um diagnóstico estruturado, realizam o pagamento e recebem uma área do cliente e painel personalizados, gerados conforme suas necessidades de negócio, tecnologia e maturidade técnica.
 
@@ -35,22 +36,22 @@ Ele passa por um diagnóstico técnico, paga pela consultoria e recebe um ambien
 
 Fluxo principal:
 
-Site → Cadastro → Questionário → Pagamento → IA configura painel → Consultoria ativa
+Site → Cadastro → Questionário → Pagamento → Backend analisa com IA → Painel configurado → Consultoria ativa
 
-🧱 Arquitetura Geral
-Frontend (Next.js / Genkit)
+🧱 Arquitetura Geral (Oficial)
+Frontend (Next.js)
         ↓
 Backend Core (Go)
-        ↓
-Supabase (Postgres)
+    ├─→ Supabase (Postgres)
+    └─→ IA Service (Python/Genkit)
 
 Separação de responsabilidades
 
-Frontend: experiência do usuário, onboarding, dashboard e lógica de IA (com Genkit).
+Frontend: experiência do usuário, onboarding, dashboard. NUNCA chama o banco ou a IA diretamente.
 
-Backend: regras de negócio core, segurança, pagamento, permissões.
+Backend: regras de negócio core, segurança, pagamento, permissões. É a única camada que se comunica com o banco de dados e com o serviço de IA.
 
-(A arquitetura foi consolidada para centralizar a lógica de IA no stack Next.js/Genkit, que atua como um Backend-for-Frontend, eliminando a necessidade de um serviço de IA Python separado.)
+IA Service: serviço externo que recebe dados do backend Go, analisa e retorna uma sugestão em formato JSON estruturado.
 
 Tech Lab: operação, confiabilidade, custo e escala
 
@@ -65,7 +66,7 @@ Tailwind CSS
 
 Arquitetura SaaS
 
-Integração via API REST
+Integração via API REST (com o Backend Go)
 
 Funcionalidades
 
@@ -113,6 +114,8 @@ Controle de acesso a módulos
 
 Logs e auditoria
 
+Orquestração de chamadas para o serviço de IA
+
 Regras centrais
 
 Usuário sem pagamento → acesso limitado
@@ -121,9 +124,9 @@ Usuário com pagamento → painel liberado conforme diagnóstico
 
 Nenhuma função crítica é liberada sem validação
 
-🤖 IA / Lógica Inteligente (Centralizada no Next.js com Genkit)
+🤖 IA / Lógica Inteligente (Centralizada via Backend)
 
-A IA não substitui a consultoria, ela apoia decisões técnicas. A lógica de IA agora reside no stack do Next.js (em `/src/ai`), utilizando Genkit.
+A IA não substitui a consultoria, ela apoia decisões técnicas. A lógica de IA reside em um serviço externo, chamado exclusivamente pelo backend Go.
 
 Funções da IA
 
@@ -131,9 +134,9 @@ Analisar respostas do questionário
 
 Classificar tipo de negócio e maturidade
 
-Definir módulos do painel
+Sugerir módulos do painel
 
-Gerar diagnóstico inicial
+Sugerir diagnóstico inicial
 
 Sugerir roadmap técnico
 
@@ -141,13 +144,13 @@ Apoiar o consultor humano
 
 Princípios
 
-IA não inventa respostas
+IA não inventa respostas; ela retorna JSON estruturado
 
 IA respeita escopo do projeto
 
 IA escala para humano quando necessário
 
-Todas as decisões são auditáveis
+Todas as decisões são auditáveis (logs no backend)
 
 🧩 Questionário Inteligente
 Objetivo
@@ -219,7 +222,7 @@ Documentos
 
 Suporte
 
-O painel é gerado dinamicamente.
+O painel é gerado dinamicamente pelo backend.
 
 🛠️ Tech Lab (Essencial)
 

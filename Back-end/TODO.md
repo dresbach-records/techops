@@ -1,3 +1,4 @@
+md
 ✅ TODO — BACKEND COMPLETO (GO) | TECH LAB
 0) Fundamentos do projeto
 
@@ -141,23 +142,26 @@ Endpoints
 
  GET /pagamentos/status
 
-6) Integração com IA (Centralizada no Frontend/Next.js)
+6) Integração com IA (Centralizada no Backend)
 
-Objetivo: IA apoia decisões, não manda. A lógica de IA foi centralizada.
+Objetivo: IA apoia decisões, não manda.
 
- Status: A responsabilidade da IA foi movida para o stack do Next.js (usando Genkit),
- que atua como um "Backend for Frontend" (BFF).
+ Status: A responsabilidade da IA foi centralizada no backend Go.
 
- O backend Go NÃO se comunica mais com um serviço de IA separado.
+ O backend Go se comunica com um serviço de IA externo (Python/Genkit).
+
+ O frontend NUNCA chama a IA diretamente.
 
 Fluxo ATUAL:
 
 Diagnóstico pago (Frontend)
- → Frontend (Server Action) chama Genkit Flow
- → Genkit retorna JSON estruturado
- → Frontend renderiza o painel
+ → Frontend envia dados para o Backend Go
+ → Backend Go chama serviço de IA
+ → Serviço de IA retorna JSON estruturado
+ → Backend Go valida, loga e processa a resposta
+ → Backend Go atualiza o painel do cliente
 
- O endpoint /internal/ia/analisar-diagnostico foi descontinuado.
+ O frontend apenas exibe o resultado final.
 
 7) Painel do Cliente (dinâmico)
 
