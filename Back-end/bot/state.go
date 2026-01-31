@@ -16,14 +16,14 @@ type SessionData struct {
 }
 
 const (
-	StateStart           State = "START"
-	StateMainMenu        State = "MAIN_MENU"
-	StateDiagnostico     State = "DIAGNOSTICO"
-	StateAcompanhamento  State = "ACOMPANHAMENTO"
-	StateHumano          State = "HUMANO"
-	StatePlanosPagamento State = "PLANOS_PAGAMENTO"
-	StateSuporte         State = "SUPORTE"
-	StateSobre           State = "SOBRE"
+	StateStart                  State = "START"
+	StateMainMenu               State = "MAIN_MENU"
+	StateDiagnostico            State = "DIAGNOSTICO"
+	StateAcompanhamentoAskEmail State = "ACOMPANHAMENTO_ASK_EMAIL"
+	StateHumano                 State = "HUMANO"
+	StatePlanosPagamento        State = "PLANOS_PAGAMENTO"
+	StateSuporte                State = "SUPORTE"
+	StateSobre                  State = "SOBRE"
 
 	// Universal Feedback Flow
 	StateFeedbackAsk State = "FEEDBACK_ASK"
