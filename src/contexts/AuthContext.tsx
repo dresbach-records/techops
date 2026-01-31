@@ -21,7 +21,9 @@ interface AuthContextType {
   isPaid: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signUp: (diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto', plan: Plan) => Promise<void>;
+  signUp: (name: string, email: string, password: string) => Promise<void>;
+  signUpFromDiagnostic: (diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto', plan: Plan) => Promise<void>;
+  recordDiagnosticAndPay: (diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto', plan: Plan) => Promise<void>;
   logout: () => void;
   setPaymentSuccess: () => void;
 }
@@ -38,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoading(true);
       if (session?.user) {
         const appUser: AppUser = {
           id: session.user.id,
@@ -48,11 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           plan: session.user.user_metadata?.plan,
         };
         setUser(appUser);
-        if (appUser.isPaid) {
-          router.push("/dashboard");
-        } else {
-          router.push("/pagamento");
-        }
       } else {
         setUser(null);
       }
@@ -62,22 +60,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [router, supabase.auth]);
+  }, [supabase.auth]);
 
   const login = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    // O onAuthStateChange cuidará do redirecionamento
+  };
+  
+  const signUp = async (name: string, email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+          isPaid: false,
+          payment_pending_boleto: false,
+        },
+      },
+    });
+    if (error) throw error;
   };
 
-  const signUp = async (diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto', plan: Plan) => {
+  const _recordDiagnosticAndSendContract = async (userId: string, userEmail: string, userName: string, diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto', plan: Plan) => {
+      const { pessoa, contato, projeto } = diagnosticData;
+      const diagnosticRecord = {
+          user_id: userId,
+          nome: pessoa.nome || userName,
+          cpf: pessoa.cpf,
+          data_nascimento: pessoa.data_nascimento,
+          cnpj: pessoa.cnpj,
+          email: contato.email || userEmail,
+          whatsapp: contato.whatsapp,
+          estagio: projeto.estagio,
+          dores: projeto.dores,
+          repositorio: projeto.repositorio,
+          expectativa: projeto.expectativa,
+          metodo_pagamento: paymentMethod,
+          status_pagamento: paymentMethod === 'card' ? 'pago' : 'pendente',
+          plano_recomendado: plan.key,
+          plano_setup_fee: plan.setupFee,
+          plano_monthly_fee: plan.monthlyFee,
+      };
+
+      const { error: insertError } = await supabase.from("diagnosticos").insert([diagnosticRecord]);
+
+      if (insertError) {
+          console.error("Erro ao salvar diagnóstico:", insertError);
+          throw new Error("Houve um erro ao salvar seu diagnóstico. Por favor, contate o suporte.");
+      }
+
+      try {
+          const contractHtml = getContractText(userName).replace(/\n/g, '<br />');
+          await fetch('http://localhost:8080/v1/send-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  to: userEmail,
+                  subject: `Seu contrato com a Tech Lab`,
+                  html: `<p>Olá ${userName},</p><p>Obrigado por se juntar à Tech Lab! Conforme nossos termos, seu cadastro confirma a aceitação do nosso contrato de serviços.</p><hr />${contractHtml}`
+              }),
+          });
+      } catch (emailError) {
+          console.error("Failed to send contract email:", emailError);
+      }
+  }
+
+  const signUpFromDiagnostic = async (diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto', plan: Plan) => {
     const email = diagnosticData.contato?.email;
     const password = diagnosticData.seguranca?.senha;
     const name = diagnosticData.pessoa?.nome;
-
-    if (!email || !password || !name) {
-      throw new Error("Email, senha e nome são obrigatórios para o cadastro.");
-    }
+    if (!email || !password || !name) throw new Error("Email, senha e nome são obrigatórios para o cadastro.");
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -85,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: {
         data: {
           name: name,
-          isPaid: true, // Libera acesso ao dashboard em ambos os casos
+          isPaid: true,
           payment_pending_boleto: paymentMethod === 'boleto',
           plan: plan.key,
         },
@@ -95,54 +148,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
     if (!data.user) throw new Error("Cadastro falhou, usuário não retornado.");
 
-    // Flatten the diagnostic data for insertion
-    const { pessoa, contato, projeto } = diagnosticData;
-    const diagnosticRecord = {
-        user_id: data.user.id,
-        nome: pessoa.nome,
-        cpf: pessoa.cpf,
-        data_nascimento: pessoa.data_nascimento,
-        cnpj: pessoa.cnpj,
-        email: contato.email,
-        whatsapp: contato.whatsapp,
-        estagio: projeto.estagio,
-        dores: projeto.dores,
-        repositorio: projeto.repositorio,
-        expectativa: projeto.expectativa,
-        metodo_pagamento: paymentMethod,
-        status_pagamento: paymentMethod === 'card' ? 'pago' : 'pendente',
-        plano_recomendado: plan.key,
-        plano_setup_fee: plan.setupFee,
-        plano_monthly_fee: plan.monthlyFee,
-    };
+    await _recordDiagnosticAndSendContract(data.user.id, email, name, diagnosticData, paymentMethod, plan);
+  };
+  
+  const recordDiagnosticAndPay = async (diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto', plan: Plan) => {
+      if (!user) throw new Error("Usuário não está autenticado para realizar esta ação.");
 
-    // Salva os dados do diagnóstico na tabela 'diagnosticos'
-    const { error: insertError } = await supabase.from("diagnosticos").insert([diagnosticRecord]);
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          isPaid: true,
+          payment_pending_boleto: paymentMethod === 'boleto',
+          plan: plan.key,
+        }
+      });
 
-    if (insertError) {
-        console.error("Erro ao salvar diagnóstico:", insertError);
-        throw new Error("Sua conta foi criada, mas houve um erro ao salvar seu diagnóstico. Por favor, contate o suporte.");
-    }
-    
-    // Send contract email via backend
-    try {
-        const contractHtml = getContractText(name).replace(/\n/g, '<br />');
-        await fetch('http://localhost:8080/v1/send-email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                to: email,
-                subject: `Seu contrato com a Tech Lab`,
-                html: `<p>Olá ${name},</p><p>Obrigado por se juntar à Tech Lab! Conforme nossos termos, seu cadastro confirma a aceitação do nosso contrato de serviços.</p><hr />${contractHtml}`
-            }),
-        });
-    } catch (emailError) {
-        console.error("Failed to send contract email:", emailError);
-        // We don't throw an error here, as the main signup was successful.
-        // In a real app, this might be queued for a retry.
-    }
+      if (error) throw error;
+      if (!data.user) throw new Error("Falha ao atualizar o usuário.");
+
+      await _recordDiagnosticAndSendContract(user.id, user.email, user.name, diagnosticData, paymentMethod, plan);
   };
 
   const logout = async () => {
@@ -166,6 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 plan: data.user.user_metadata?.plan,
             };
             setUser(appUser);
+            router.push('/dashboard');
         }
         if (error) {
             console.error("Error updating user payment status", error);
@@ -185,6 +209,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         login,
         signUp,
+        signUpFromDiagnostic,
+        recordDiagnosticAndPay,
         logout,
         setPaymentSuccess
       }}

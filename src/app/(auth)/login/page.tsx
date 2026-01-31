@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Rocket } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Por favor, insira um e-mail válido." }),
@@ -35,6 +36,7 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const loginBgImage = PlaceHolderImages.find((p) => p.id === 'login-background');
@@ -51,7 +53,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await login(values.email, values.password);
-      // O redirecionamento será feito pelo AuthContext
+      router.push('/dashboard');
     } catch (error) {
       toast({
         variant: "destructive",

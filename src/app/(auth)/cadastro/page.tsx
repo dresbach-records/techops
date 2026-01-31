@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Rocket } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const signupSchema = z.object({
   name: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
@@ -37,6 +38,7 @@ const signupSchema = z.object({
 export default function SignupPage() {
   const { signUp } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const loginBgImage = PlaceHolderImages.find((p) => p.id === 'login-background');
 
@@ -55,8 +57,9 @@ export default function SignupPage() {
       await signUp(values.name, values.email, values.password);
       toast({
         title: "Conta criada com sucesso!",
-        description: "Você será redirecionado para o questionário.",
+        description: "Você será redirecionado para iniciar seu diagnóstico.",
       });
+      router.push('/diagnostico');
     } catch (error) {
       toast({
         variant: "destructive",

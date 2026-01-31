@@ -201,7 +201,7 @@ export default function PaymentPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { data: diagnosticData, resetData } = useDiagnostic();
-  const { signUp } = useAuth();
+  const { isAuthenticated, signUpFromDiagnostic, recordDiagnosticAndPay } = useAuth();
   const [isLoading, setIsLoading] = useState<'card' | 'boleto' | null>(null);
   const [selectedInstallment, setSelectedInstallment] = useState('1');
 
@@ -214,22 +214,27 @@ export default function PaymentPage() {
   const handlePayment = async (method: 'card' | 'boleto') => {
     setIsLoading(method);
     try {
-        await signUp(diagnosticData, method, recommendedPlan);
+        if (isAuthenticated) {
+            await recordDiagnosticAndPay(diagnosticData, method, recommendedPlan);
+        } else {
+            await signUpFromDiagnostic(diagnosticData, method, recommendedPlan);
+        }
         
         toast({
-            title: "Conta criada com sucesso!",
+            title: "Processo finalizado com sucesso!",
             description: method === 'card' 
               ? "Seu painel personalizado está sendo preparado." 
               : "Um boleto foi gerado. Você será notificado no seu painel.",
         });
 
-        resetData(); 
+        resetData();
+        router.push('/dashboard');
         
     } catch (error) {
         toast({
             variant: "destructive",
             title: "Erro no Processamento",
-            description: error instanceof Error ? error.message : "Não foi possível criar sua conta. Verifique os dados e tente novamente.",
+            description: error instanceof Error ? error.message : "Não foi possível finalizar. Verifique os dados e tente novamente.",
         });
         setIsLoading(null);
     }
