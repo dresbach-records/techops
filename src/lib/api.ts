@@ -32,4 +32,20 @@ export async function login(email: string, password: string): Promise<{ token: s
     return handleResponse(response);
 }
 
+export async function getRecommendedPlan(projectData: { estagio?: string; dores?: string[]; repositorio?: string; }): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/diagnostico/recommend-plan`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            estagio: projectData.estagio || "",
+            dores: projectData.dores || [],
+            repositorio: projectData.repositorio || "",
+        }),
+    });
+    return handleResponse(response);
+}
+
+
 // TODO: Add other endpoints as the backend grows (e.g., submitDiagnostic, getDashboardData, etc.)

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { CreditCard, Loader2, ChevronLeft, FileDown, Info } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useDiagnostic } from "@/contexts/DiagnosticContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
@@ -29,10 +29,40 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Plan } from "@/types";
-import { calculatePlan, calculateInstallments } from "@/lib/plan-calculator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { getRecommendedPlan } from "@/lib/api";
+
+
+// Simple interest calculation for demonstration
+const calculateInstallments = (total: number) => {
+    const installments = [];
+    const baseInterestRate = 0.0199; // 1.99% per month
+
+    for (let i = 1; i <= 12; i++) {
+        if (i === 1) {
+            installments.push({
+                num: 1,
+                value: total,
+                total: total,
+                label: `1x de ${total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+            });
+        } else {
+            // J = C * i * t
+            const interest = total * baseInterestRate * i;
+            const finalValue = total + interest;
+            const installmentValue = finalValue / i;
+            installments.push({
+                num: i,
+                value: installmentValue,
+                total: finalValue,
+                label: `${i}x de ${installmentValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+            });
+        }
+    }
+    return installments;
+}
 
 
 function ExtratoDialogContent({ plan }: { plan: Plan }) {
@@ -202,15 +232,54 @@ export default function PaymentPage() {
   const { data: diagnosticData, resetData } = useDiagnostic();
   const { user, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState<'card' | 'boleto' | null>(null);
+  const [isLoadingPlan, setIsLoadingPlan] = useState(true);
+  const [recommendedPlan, setRecommendedPlan] = useState<Plan | null>(null);
   const [selectedInstallment, setSelectedInstallment] = useState('1');
 
-  const recommendedPlan = useMemo(() => calculatePlan(diagnosticData), [diagnosticData]);
+  useEffect(() => {
+    const fetchPlan = async () => {
+        if (diagnosticData.projeto.estagio) {
+            try {
+                setIsLoadingPlan(true);
+                const plan = await getRecommendedPlan(diagnosticData.projeto);
+                setRecommendedPlan(plan);
+            } catch (error) {
+                 toast({
+                    variant: "destructive",
+                    title: "Erro ao Carregar Plano",
+                    description: error instanceof Error ? error.message : "Não foi possível recomendar um plano. Tente voltar e avançar novamente.",
+                });
+            } finally {
+                setIsLoadingPlan(false);
+            }
+        } else {
+            // Se não houver dados do estágio, não podemos carregar o plano
+            setIsLoadingPlan(false);
+             toast({
+                variant: "destructive",
+                title: "Diagnóstico Incompleto",
+                description: "Por favor, preencha as etapas anteriores do diagnóstico.",
+            });
+            router.push('/diagnostico/06-estagio');
+        }
+    };
+    fetchPlan();
+}, [diagnosticData.projeto, toast, router]);
 
-  const totalValue = recommendedPlan.setupFee + (recommendedPlan.monthlyFee > 0 ? recommendedPlan.monthlyFee : 0);
+  const totalValue = recommendedPlan ? recommendedPlan.setupFee + (recommendedPlan.monthlyFee > 0 ? recommendedPlan.monthlyFee : 0) : 0;
   const installmentOptions = useMemo(() => calculateInstallments(totalValue), [totalValue]);
   const currentInstallment = installmentOptions.find(i => i.num === parseInt(selectedInstallment, 10));
 
   const handlePayment = async (method: 'card' | 'boleto') => {
+    if (!recommendedPlan) {
+        toast({
+            variant: "destructive",
+            title: "Plano não carregado",
+            description: "Aguarde o carregamento do plano antes de prosseguir.",
+        });
+        return;
+    }
+
     setIsLoading(method);
     try {
         // If user is not logged in, sign them up first.
@@ -251,6 +320,50 @@ export default function PaymentPage() {
         setIsLoading(null);
     }
   };
+
+  if (isLoadingPlan) {
+    return (
+         <>
+            <CardHeader className="text-center p-8">
+                <div className="mx-auto bg-primary text-primary-foreground rounded-full h-12 w-12 flex items-center justify-center mb-4">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+                <CardTitle className="font-headline text-2xl">Analisando seu diagnóstico...</CardTitle>
+                <CardDescription>Estamos calculando o plano ideal para suas necessidades.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 min-h-[250px] px-8 flex items-center justify-center">
+                <p className="text-muted-foreground">Aguarde um momento.</p>
+            </CardContent>
+             <CardFooter className="flex items-center justify-center border-t bg-slate-50/50 p-4">
+                <Button variant="ghost" asChild>
+                    <Link href="/diagnostico/09-expectativa"><ChevronLeft className="mr-2 h-4 w-4" /> Voltar</Link>
+                </Button>
+            </CardFooter>
+        </>
+    )
+  }
+
+  if (!recommendedPlan) {
+    return (
+        <>
+           <CardHeader className="text-center p-8">
+               <div className="mx-auto bg-destructive text-destructive-foreground rounded-full h-12 w-12 flex items-center justify-center mb-4">
+                   <Info className="h-6 w-6" />
+               </div>
+               <CardTitle className="font-headline text-2xl">Erro ao carregar o plano</CardTitle>
+               <CardDescription>Não foi possível determinar um plano com os dados fornecidos.</CardDescription>
+           </CardHeader>
+           <CardContent className="space-y-6 min-h-[250px] px-8 flex items-center justify-center">
+               <p className="text-muted-foreground text-center">Por favor, volte e verifique as informações do seu diagnóstico.</p>
+           </CardContent>
+            <CardFooter className="flex items-center justify-center border-t bg-slate-50/50 p-4">
+               <Button variant="ghost" asChild>
+                   <Link href="/diagnostico/09-expectativa"><ChevronLeft className="mr-2 h-4 w-4" /> Voltar</Link>
+               </Button>
+           </CardFooter>
+       </>
+   )
+  }
 
   return (
     <>

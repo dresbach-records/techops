@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"techlab/backend-go/internal/auth"
+	"techlab/backend-go/internal/diagnostico"
 	"techlab/backend-go/internal/email"
 	"techlab/backend-go/internal/pagamento"
 	"techlab/backend-go/internal/users"
@@ -81,6 +82,11 @@ func NewServer(db *sql.DB) *gin.Engine {
 		{
 			authRoutes.POST("/register", authHandler.Register)
 			authRoutes.POST("/login", authHandler.Login)
+		}
+
+		diagRoutes := v1.Group("/diagnostico")
+		{
+			diagRoutes.POST("/recommend-plan", diagnostico.RecommendPlanHandler)
 		}
 
 		if emailSvc != nil {
