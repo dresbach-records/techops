@@ -47,16 +47,13 @@ func NewServer(db *sql.DB) *gin.Engine {
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
 		// Check database connection
-		dbStatus := "ok"
 		if err := db.Ping(); err != nil {
-			dbStatus = "down"
 			log.Printf("ERROR: Database health check failed: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"db": "down"})
+			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"status": "UP",
-			"db":     dbStatus,
-		})
+		c.JSON(http.StatusOK, gin.H{"db": "ok"})
 	})
 
 	// Webhook endpoints for WhatsApp

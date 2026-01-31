@@ -15,9 +15,15 @@ func main() {
 	// Initialize database connection
 	database, err := db.Connect()
 	if err != nil {
-		log.Fatalf("DB connection failed: %v", err)
+		log.Fatalf("❌ DB configuration failed: %v", err)
 	}
 	defer database.Close()
+
+	// Ping the database to verify the connection is alive before starting.
+	if err := database.Ping(); err != nil {
+		log.Fatalf("❌ DB connection failed: %v", err)
+	}
+	log.Println("✅ Successfully connected to the Supabase database.")
 
 	// Create a new server, passing the database connection
 	srv := server.NewServer(database)
