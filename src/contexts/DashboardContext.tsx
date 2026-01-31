@@ -2,11 +2,11 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { getDashboardData } from "@/lib/api";
-import type { DashboardData } from "@/types";
+import type { PainelResponse } from "@/types/painel";
 import { useAuth } from "./AuthContext";
 
 interface DashboardContextType {
-  dashboardData: DashboardData | null;
+  dashboardData: PainelResponse | null;
   loading: boolean;
   error: string | null;
   refetch: () => void;
@@ -16,7 +16,7 @@ const DashboardContext = createContext<DashboardContextType | undefined>(undefin
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<PainelResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

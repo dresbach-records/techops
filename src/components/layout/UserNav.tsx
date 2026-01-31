@@ -35,17 +35,17 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 px-2 flex items-center gap-2">
             <Avatar className="h-8 w-8">
-                <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.name} />
-                <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.nome} />
+                <AvatarFallback>{getInitials(user.nome)}</AvatarFallback>
             </Avatar>
-            <span className="hidden sm:inline-block font-medium">{user.name}</span>
+            <span className="hidden sm:inline-block font-medium">{user.nome}</span>
             <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:inline-block" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name}</p>
+            <p className="text-sm font-medium leading-none">{user.nome}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>

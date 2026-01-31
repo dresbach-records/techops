@@ -1,6 +1,6 @@
 "use client";
 
-import type { AppUser } from "@/types";
+import type { UserMeResponse } from "@/types/user";
 import {
   createContext,
   useContext,
@@ -13,18 +13,18 @@ import { useRouter } from "next/navigation";
 import { login as apiLogin, register as apiRegister, getMe } from "@/lib/api";
 
 interface AuthContextType {
-  user: AppUser | null;
+  user: UserMeResponse | null;
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<AppUser | null>;
+  signUp: (name: string, email: string, password: string) => Promise<UserMeResponse | null>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AppUser | null>(null);
+  const [user, setUser] = useState<UserMeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(fetchedUser);
   };
   
-  const signUp = async (name: string, email: string, password: string): Promise<AppUser | null> => {
+  const signUp = async (name: string, email: string, password: string): Promise<UserMeResponse | null> => {
     const { access_token } = await apiRegister(name, email, password);
     localStorage.setItem("authToken", access_token);
     const fetchedUser = await getMe();

@@ -28,11 +28,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { DiagnosticResult, Plan } from "@/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getDiagnosticResult, createPayment } from "@/lib/api";
+
+import type { DiagnosticoResultadoResponse, Plano } from "@/types/plano";
 
 
 // Simple interest calculation for demonstration
@@ -65,7 +66,7 @@ const calculateInstallments = (total: number) => {
 }
 
 
-function ExtratoDialogContent({ plan }: { plan: Plan }) {
+function ExtratoDialogContent({ plan }: { plan: Plano }) {
     const { toast } = useToast();
 
     const handleDownloadPdf = () => {
@@ -77,7 +78,7 @@ function ExtratoDialogContent({ plan }: { plan: Plan }) {
 
     const invoiceItems = [
         { service: "Taxa de Setup", details: `Setup e configuração do plano ${plan.codigo}`, price: plan.setup_valor },
-        ...(plan.mensal_valor > 0 ? [{ service: `Primeira Mensalidade`, details: `Referente ao plano ${plan.codigo}`, price: plan.mensal_valor }] : [])
+        ...(plan.mensal_valor && plan.mensal_valor > 0 ? [{ service: `Primeira Mensalidade`, details: `Referente ao plano ${plan.codigo}`, price: plan.mensal_valor }] : [])
     ];
     const total = invoiceItems.reduce((acc, item) => acc + item.price, 0);
 
@@ -234,7 +235,7 @@ export default function ResultadoPagamentoPage() {
   const [paymentMethod, setPaymentMethod] = useState<'credito' | 'boleto' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
-  const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticResult | null>(null);
+  const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticoResultadoResponse | null>(null);
   const [loadingPlan, setLoadingPlan] = useState(true);
   const [errorPlan, setErrorPlan] = useState<string | null>(null);
 
@@ -257,7 +258,7 @@ export default function ResultadoPagamentoPage() {
   }, []);
 
   const plan = diagnosticResult?.plano;
-  const totalValue = plan ? plan.setup_valor + (plan.mensal_valor > 0 ? plan.mensal_valor : 0) : 0;
+  const totalValue = plan ? plan.setup_valor + (plan.mensal_valor ?? 0) : 0;
   const installmentOptions = useMemo(() => calculateInstallments(totalValue), [totalValue]);
   const currentInstallment = installmentOptions.find(i => i.num === parseInt(selectedInstallment, 10));
 
