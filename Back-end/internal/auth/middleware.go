@@ -69,3 +69,30 @@ func AuthRequired() gin.HandlerFunc {
 		}
 	}
 }
+
+// RequireRole is a middleware to check for specific user roles.
+// It must be used AFTER AuthRequired().
+func RequireRole(roles ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userRole, exists := c.Get("userRole")
+		if !exists {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Role not found in token"})
+			return
+		}
+
+		role, ok := userRole.(string)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Invalid role format in token"})
+			return
+		}
+
+		for _, r := range roles {
+			if role == r {
+				c.Next()
+				return
+			}
+		}
+
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "You do not have permission to access this resource"})
+	}
+}

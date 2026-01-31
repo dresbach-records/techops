@@ -45,7 +45,7 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"token": token})
+	c.JSON(http.StatusCreated, gin.H{"access_token": token})
 }
 
 // Login handles user authentication.
@@ -62,5 +62,5 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	c.JSON(http.StatusOK, gin.H{"access_token": token})
 }

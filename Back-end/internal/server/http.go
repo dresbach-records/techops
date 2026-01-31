@@ -73,6 +73,7 @@ func NewServer(db *sql.DB) *gin.Engine {
 	}
 	authHandler := auth.NewHandler(authSvc)
 	painelHandler := painel.NewHandler()
+	usersHandler := users.NewHandler(userRepo)
 
 	// API versioning group
 	v1 := router.Group("/v1")
@@ -99,6 +100,7 @@ func NewServer(db *sql.DB) *gin.Engine {
 		api := v1.Group("/")
 		api.Use(auth.AuthRequired())
 		{
+			api.GET("/users/me", usersHandler.GetMe)
 			api.GET("/dashboard", painelHandler.GetDashboard)
 			api.POST("/payments/boleto", pagamento.GenerateBoletoHandler())
 		}

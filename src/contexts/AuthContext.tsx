@@ -10,8 +10,7 @@ import {
   useCallback,
 } from "react";
 import { useRouter } from "next/navigation";
-import { jwtDecode } from "jwt-decode";
-import { login as apiLogin, register as apiRegister } from "@/lib/api";
+import { login as apiLogin, register as apiRegister, getMe } from "@/lib/api";
 
 interface AuthContextType {
   user: AppUser | null;
@@ -29,38 +28,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const decodeToken = (token: string): AppUser | null => {
-  try {
-    const decoded: { sub: string; name: string; email: string; role: string; exp: number } = jwtDecode(token);
-    // Check if token is expired
-    if (decoded.exp * 1000 < Date.now()) {
-      return null;
-    }
-    return {
-      id: decoded.sub,
-      name: decoded.name,
-      email: decoded.email, 
-      isPaid: false, // This logic needs to be moved to the backend
-      plan: 'START', // This logic needs to be moved to the backend
-    };
-  } catch (error) {
-    console.error("Failed to decode JWT:", error);
-    return null;
-  }
-};
-
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
-  const handleAuthSuccess = useCallback((token: string): AppUser | null => {
-    localStorage.setItem("authToken", token);
-    const decodedUser = decodeToken(token);
-    setUser(decodedUser);
-    return decodedUser;
-  }, []);
   
   const logout = useCallback(() => {
     localStorage.removeItem("authToken");
@@ -68,33 +39,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/");
   }, [router]);
 
+  // This effect runs once on mount to check for an existing session.
   useEffect(() => {
-    try {
+    const initializeAuth = async () => {
       const token = localStorage.getItem("authToken");
       if (token) {
-        const decodedUser = decodeToken(token);
-        if(decodedUser) {
-          setUser(decodedUser);
-        } else {
-          // Token is expired or invalid
+        try {
+          // Verify token with backend and get user data
+          const fetchedUser = await getMe();
+          // The backend response for user is partial for AppUser, so we patch it.
+          // This should be fixed later by having the backend be the source of truth for all user fields.
+           const fullUser: AppUser = {
+              ...fetchedUser,
+              isPaid: false, // Stub
+              plan: 'START', // Stub
+          };
+          setUser(fullUser);
+        } catch (error) {
+          console.error("Auth initialization failed, token might be invalid:", error);
           logout();
         }
       }
-    } catch (e) {
-        console.error("Auth init error:", e);
-    } finally {
       setLoading(false);
-    }
+    };
+    initializeAuth();
   }, [logout]);
 
   const login = async (email: string, password: string) => {
-    const { token } = await apiLogin(email, password);
-    handleAuthSuccess(token);
+    const { access_token } = await apiLogin(email, password);
+    localStorage.setItem("authToken", access_token);
+    const fetchedUser = await getMe();
+     const fullUser: AppUser = {
+        ...fetchedUser,
+        isPaid: false, // Stub
+        plan: 'START', // Stub
+    };
+    setUser(fullUser);
   };
   
-  const signUp = async (name: string, email: string, password: string) => {
-    const { token } = await apiRegister(name, email, password);
-    return handleAuthSuccess(token);
+  const signUp = async (name: string, email: string, password: string): Promise<AppUser | null> => {
+    const { access_token } = await apiRegister(name, email, password);
+    localStorage.setItem("authToken", access_token);
+    const fetchedUser = await getMe();
+     const fullUser: AppUser = {
+        ...fetchedUser,
+        isPaid: false, // Stub
+        plan: 'START', // Stub
+    };
+    setUser(fullUser);
+    return fullUser;
   };
   
   // Stubs for deprecated functions to prevent crashes in other components.

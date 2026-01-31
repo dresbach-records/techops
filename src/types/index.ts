@@ -2,6 +2,9 @@ export type AppUser = {
   id: string;
   name: string;
   email: string;
+  role: string;
+  created_at: string;
+  updated_at: string;
   isPaid: boolean;
   payment_pending_boleto?: boolean;
   plan?: 'START' | 'BUILD' | 'SCALE' | 'RECOVERY';

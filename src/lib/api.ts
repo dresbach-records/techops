@@ -1,5 +1,5 @@
 // This file is the new API client for communicating with the Go backend.
-import type { DashboardData, Plan } from "@/types";
+import type { AppUser, DashboardData, Plan } from "@/types";
 
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1';
@@ -12,7 +12,7 @@ async function handleResponse(response: Response) {
     return response.json();
 }
 
-export async function register(name: string, email: string, password: string): Promise<{ token: string }> {
+export async function register(name: string, email: string, password: string): Promise<{ access_token: string }> {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
@@ -23,13 +23,29 @@ export async function register(name: string, email: string, password: string): P
     return handleResponse(response);
 }
 
-export async function login(email: string, password: string): Promise<{ token: string }> {
+export async function login(email: string, password: string): Promise<{ access_token: string }> {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
+    });
+    return handleResponse(response);
+}
+
+export async function getMe(): Promise<AppUser> {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        throw new Error('Authentication token not found.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
     });
     return handleResponse(response);
 }
