@@ -2,6 +2,8 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Heart } from "lucide-react";
 
 function PrivacyPolicyContent() {
     return (
@@ -183,6 +185,38 @@ function TermsOfServiceContent() {
     );
 }
 
+function SupportProjectContent() {
+    return (
+        <div className="space-y-4 text-muted-foreground">
+          <p>
+            A Tech Lab está construindo um novo padrão de engenharia digital — um workspace técnico vivo com IA que guia projeto, diagnóstico, correção e evolução de produtos com método e rastreabilidade.
+          </p>
+          <p>
+            Se você acredita nesta ideia e quer apoiar o desenvolvimento deste projeto open-source, sua contribuição é muito bem-vinda.
+          </p>
+           <Button asChild className="w-full">
+            <a href="https://www.asaas.com/c/xln8596be4pwvq8e" target="_blank" rel="noopener noreferrer">
+              <Heart className="mr-2 h-4 w-4" /> Contribuir Agora
+            </a>
+          </Button>
+          <div className="pt-4 text-center">
+            <h3 className="font-semibold text-foreground">Sua contribuição ajuda a:</h3>
+            <ul className="list-none space-y-1 mt-2 text-sm">
+              <li>Manter a infraestrutura do projeto</li>
+              <li>Financiar desenvolvimento e testes</li>
+              <li>Melhorar documentos e metodologias</li>
+              <li>Apoiar colaboradores técnicos</li>
+              <li>Manter o projeto aberto e independente</li>
+            </ul>
+          </div>
+          <p className="pt-4 text-center font-medium">
+            Obrigado pelo apoio à evolução da engenharia digital.
+          </p>
+        </div>
+    );
+}
+
+
 export function Footer() {
   return (
     <footer className="border-t bg-card">
@@ -222,15 +256,13 @@ export function Footer() {
             <span className="text-muted-foreground hidden sm:inline">|</span>
             <Dialog>
               <DialogTrigger asChild>
-                 <button className="text-muted-foreground hover:text-primary text-center underline-offset-4 hover:underline">Exclusão de Dados do Usuário</button>
+                 <button className="text-muted-foreground hover:text-primary text-center underline-offset-4 hover:underline">Apoie o Projeto</button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-3xl">
+              <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="text-2xl font-headline">Política de Privacidade – TECH LAB</DialogTitle>
+                  <DialogTitle className="text-2xl font-headline text-center">💜 Apoie a Tech Lab</DialogTitle>
                 </DialogHeader>
-                <ScrollArea className="max-h-[70vh] p-4 border rounded-md">
-                  <PrivacyPolicyContent />
-                </ScrollArea>
+                <SupportProjectContent />
               </DialogContent>
             </Dialog>
           </div>
