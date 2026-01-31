@@ -37,17 +37,17 @@ const overviewCards = [
 ];
 
 const recentDiagnostics = [
-    { client: "João Pereira", stage: "Protótipo", complexity: "Média", status: "Em Análise", consultant: "Lucas" },
-    { client: "Empresa XYZ", stage: "Produção", complexity: "Alta", status: "Concluído", consultant: "Mariana" },
-    { client: "Ana Souza", stage: "Ideia", complexity: "Baixa", status: "Novo", consultant: "Pedro" },
-    { client: "Tech Startup ABC", stage: "Reestruturação", complexity: "Média", status: "Em Análise", consultant: "Carla" },
-    { client: "Roberto Lima", stage: "Protótipo", complexity: "Baixa", status: "Novo", consultant: "Lucas" },
+    { client: "João Pereira", status: "Em Análise", plan: "BUILD" },
+    { client: "Empresa XYZ", status: "Aprovado", plan: "SCALE" },
+    { client: "Ana Souza", status: "Pendente", plan: "START" },
+    { client: "Tech Startup ABC", status: "Em Análise", plan: "RECOVERY" },
+    { client: "Roberto Lima", status: "Pendente", plan: "BUILD" },
 ];
 
 const statusColors: { [key: string]: string } = {
     "Em Análise": "bg-yellow-100 text-yellow-800",
-    "Concluído": "bg-green-100 text-green-800",
-    "Novo": "bg-blue-100 text-blue-800",
+    "Aprovado": "bg-green-100 text-green-800",
+    "Pendente": "bg-blue-100 text-blue-800",
 };
 
 const consultoriaData = [
@@ -102,22 +102,20 @@ export default function AdminDashboardPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Cliente</TableHead>
-                            <TableHead>Estágio</TableHead>
-                            <TableHead>Complexidade</TableHead>
+                            <TableHead>Plano Recomendado</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead>Consultor</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {recentDiagnostics.map(diag => (
                             <TableRow key={diag.client}>
                                 <TableCell className="font-medium">{diag.client}</TableCell>
-                                <TableCell>{diag.stage}</TableCell>
-                                <TableCell>{diag.complexity}</TableCell>
+                                <TableCell>
+                                    <Badge variant="outline">{diag.plan}</Badge>
+                                </TableCell>
                                 <TableCell>
                                     <Badge className={`${statusColors[diag.status]} hover:${statusColors[diag.status]}`}>{diag.status}</Badge>
                                 </TableCell>
-                                <TableCell>{diag.consultant}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>

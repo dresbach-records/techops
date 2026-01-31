@@ -19,6 +19,7 @@ const diagnostics = [
     submittedAt: "2024-07-28",
     status: "Pendente",
     recommendedPlan: "BUILD",
+    risk: "Médio",
   },
   {
     id: "DIAG-002",
@@ -26,6 +27,7 @@ const diagnostics = [
     submittedAt: "2024-07-27",
     status: "Aprovado",
     recommendedPlan: "SCALE",
+    risk: "Baixo",
   },
   {
     id: "DIAG-003",
@@ -33,6 +35,7 @@ const diagnostics = [
     submittedAt: "2024-07-26",
     status: "Requer Ajuste",
     recommendedPlan: "START",
+    risk: "Alto",
   },
   {
     id: "DIAG-004",
@@ -40,6 +43,7 @@ const diagnostics = [
     submittedAt: "2024-07-25",
     status: "Aprovado",
     recommendedPlan: "RECOVERY",
+    risk: "Alto",
   },
 ];
 
@@ -47,6 +51,12 @@ const statusVariant: { [key: string]: "default" | "secondary" | "destructive" | 
   "Pendente": "secondary",
   "Aprovado": "default",
   "Requer Ajuste": "destructive",
+};
+
+const riskVariant: { [key: string]: "default" | "secondary" | "destructive" } = {
+  "Baixo": "default",
+  "Médio": "secondary",
+  "Alto": "destructive",
 };
 
 export default function DiagnosticosPage() {
@@ -66,6 +76,7 @@ export default function DiagnosticosPage() {
                 <TableHead>Cliente</TableHead>
                 <TableHead>Data de Envio</TableHead>
                 <TableHead>Plano Recomendado</TableHead>
+                <TableHead>Risco (IA)</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>
                   <span className="sr-only">Ações</span>
@@ -79,6 +90,9 @@ export default function DiagnosticosPage() {
                   <TableCell>{diag.submittedAt}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{diag.recommendedPlan}</Badge>
+                  </TableCell>
+                   <TableCell>
+                    <Badge variant={riskVariant[diag.risk as keyof typeof riskVariant]}>{diag.risk}</Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={statusVariant[diag.status]}>{diag.status}</Badge>

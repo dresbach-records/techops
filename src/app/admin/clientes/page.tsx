@@ -20,7 +20,8 @@ const clients = [
     email: "contato@inovadora.com",
     plan: "BUILD",
     status: "Ativo",
-    joinedAt: "2024-07-28",
+    lastActivity: "2024-08-12",
+    risk: "Baixo",
   },
   {
     id: "USR-002",
@@ -28,7 +29,8 @@ const clients = [
     email: "dev@agil.io",
     plan: "SCALE",
     status: "Ativo",
-    joinedAt: "2024-07-27",
+    lastActivity: "2024-08-11",
+    risk: "Médio",
   },
     {
     id: "USR-003",
@@ -36,7 +38,8 @@ const clients = [
     email: "jose.silva@example.com",
     plan: "START",
     status: "Pendente",
-    joinedAt: "2024-07-26",
+    lastActivity: "2024-08-10",
+    risk: "Baixo",
   },
    {
     id: "USR-004",
@@ -44,7 +47,8 @@ const clients = [
     email: "suporte@techsolutions.com.br",
     plan: "RECOVERY",
     status: "Inativo",
-    joinedAt: "2024-07-25",
+    lastActivity: "2024-07-25",
+    risk: "Alto",
   },
 ];
 
@@ -52,6 +56,12 @@ const statusVariant: { [key: string]: "default" | "secondary" | "destructive" | 
   "Ativo": "default",
   "Pendente": "secondary",
   "Inativo": "destructive",
+};
+
+const riskVariant: { [key: string]: "default" | "secondary" | "destructive" } = {
+  "Baixo": "default",
+  "Médio": "secondary",
+  "Alto": "destructive",
 };
 
 const getInitials = (name: string) => {
@@ -80,7 +90,8 @@ export default function ClientesPage() {
                 <TableHead>Cliente</TableHead>
                 <TableHead>Plano</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Data de Entrada</TableHead>
+                <TableHead>Última Atividade</TableHead>
+                <TableHead>Risco Técnico</TableHead>
                 <TableHead>
                   <span className="sr-only">Ações</span>
                 </TableHead>
@@ -107,7 +118,10 @@ export default function ClientesPage() {
                   <TableCell>
                     <Badge variant={statusVariant[client.status]}>{client.status}</Badge>
                   </TableCell>
-                  <TableCell>{client.joinedAt}</TableCell>
+                  <TableCell>{client.lastActivity}</TableCell>
+                  <TableCell>
+                    <Badge variant={riskVariant[client.risk]}>{client.risk}</Badge>
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -120,6 +134,7 @@ export default function ClientesPage() {
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuItem>Ver Painel</DropdownMenuItem>
                         <DropdownMenuItem>Editar Cadastro</DropdownMenuItem>
+                        <DropdownMenuItem>Ajustar Plano</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive">Desativar Cliente</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
