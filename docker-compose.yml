@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - api
+      - bot
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # This URL points to Nginx, which will proxy requests to the correct backend.
+      - NEXT_PUBLIC_API_URL=http://localhost/v1
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./Back-end
+      dockerfile: Dockerfile
+    env_file:
+      - ./Back-end/.env
+    restart: unless-stopped
+
+  bot:
+    build:
+      context: ./Back-end/bot
+      dockerfile: Dockerfile
+    env_file:
+      - ./Back-end/.env
+    restart: unless-stopped
