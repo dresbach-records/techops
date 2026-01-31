@@ -4,12 +4,113 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Loader2, ChevronLeft, CheckCircle } from "lucide-react";
+import { CreditCard, Loader2, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 import { useDiagnostic } from "@/contexts/DiagnosticContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+const invoiceItems = [
+  {
+    service: "Diagnóstico Técnico e Plataforma",
+    details: "Acesso completo e análise inicial",
+    price: 999.0,
+  },
+  {
+    service: "Desconto de Lançamento",
+    details: "Cupom: STARTUP2026",
+    price: -100.0,
+  },
+];
+const total = invoiceItems.reduce((acc, item) => acc + item.price, 0);
+
+function ExtratoDialogContent() {
+    return (
+        <DialogContent className="max-w-2xl p-0">
+            <DialogHeader className="p-6 pb-0">
+                <DialogTitle className="text-2xl font-headline">Extrato de Serviço</DialogTitle>
+                <DialogDescription>Detalhes da sua contratação com a Tech Lab.</DialogDescription>
+            </DialogHeader>
+            <div className="p-6">
+              <div className="grid gap-4">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4">
+                      <div>
+                          <p className="font-semibold text-muted-foreground">FATURADO PARA</p>
+                          <p>João Pereira (Exemplo)</p>
+                          <p>joao.exemplo@email.com</p>
+                      </div>
+                      <div className="text-left sm:text-right">
+                          <p className="font-semibold text-muted-foreground">Nº DO EXTRATO</p>
+                          <p>TL-2026-001</p>
+                          <p className="font-semibold text-muted-foreground mt-2">DATA</p>
+                          <p>{new Date().toLocaleDateString("pt-BR")}</p>
+                      </div>
+                  </div>
+                  <Separator />
+                  <Table>
+                      <TableHeader>
+                          <TableRow>
+                              <TableHead>Serviço</TableHead>
+                              <TableHead className="text-right">Valor (BRL)</TableHead>
+                          </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                          {invoiceItems.map((item, index) => (
+                              <TableRow key={index}>
+                                  <TableCell>
+                                      <p className="font-medium">{item.service}</p>
+                                      <p className="text-sm text-muted-foreground">{item.details}</p>
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                      {item.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                                  </TableCell>
+                              </TableRow>
+                          ))}
+                      </TableBody>
+                  </Table>
+              </div>
+            </div>
+            <div className="bg-muted/50 p-6 rounded-b-lg">
+                <div className="w-full flex justify-end">
+                    <div className="grid gap-2 text-right w-full max-w-sm">
+                        <div className="flex justify-between items-center gap-4">
+                            <p className="font-semibold">Subtotal</p>
+                            <p>{(total - invoiceItems.find(item => item.price < 0)!.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
+                        </div>
+                        <div className="flex justify-between items-center gap-4">
+                            <p className="font-semibold text-destructive">Descontos</p>
+                            <p className="text-destructive">{invoiceItems.find(item => item.price < 0)!.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
+                        </div>
+                        <Separator className="my-2" />
+                        <div className="flex justify-between items-center gap-4">
+                            <p className="text-lg font-bold">Total a Pagar</p>
+                            <p className="text-lg font-bold">
+                                {total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </DialogContent>
+    );
+}
 
 
 export default function PaymentPage() {
@@ -22,7 +123,6 @@ export default function PaymentPage() {
   const handlePayment = async (method: 'card' | 'boleto') => {
     setIsLoading(method);
     try {
-        // Cria o usuário no Supabase Auth e salva os dados do diagnóstico
         await signUp(diagnosticData, method);
         
         toast({
@@ -32,10 +132,8 @@ export default function PaymentPage() {
               : "Um boleto foi gerado. Você será notificado no seu painel.",
         });
 
-        resetData(); // Limpa os dados do diagnóstico do localStorage
+        resetData(); 
         
-        // O AuthContext irá redirecionar para o dashboard automaticamente após o login
-
     } catch (error) {
         toast({
             variant: "destructive",
@@ -90,9 +188,14 @@ export default function PaymentPage() {
             </div>
 
             <div className="text-center text-sm">
-                <Link href="/extrato" className="underline text-muted-foreground hover:text-primary" target="_blank">
-                    Ver extrato detalhado da cobrança
-                </Link>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="underline text-muted-foreground hover:text-primary">
+                      Ver extrato detalhado da cobrança
+                  </button>
+                </DialogTrigger>
+                <ExtratoDialogContent />
+              </Dialog>
             </div>
             
         </CardContent>
