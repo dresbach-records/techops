@@ -56,9 +56,15 @@ function ExtratoDialogContent() {
 
     return (
         <DialogContent className="max-w-lg p-0">
-            <DialogHeader className="p-6 pb-0">
-                <DialogTitle className="text-2xl font-headline">Extrato de Serviço</DialogTitle>
-                <DialogDescription>Detalhes da sua contratação com a Tech Lab.</DialogDescription>
+            <DialogHeader className="p-6 pb-4 flex-row items-start justify-between space-y-0 border-b sm:text-left text-left">
+              <div>
+                  <DialogTitle className="text-2xl font-headline">Extrato de Serviço</DialogTitle>
+                  <DialogDescription>Detalhes da sua contratação com a Tech Lab.</DialogDescription>
+              </div>
+              <Button onClick={handleDownloadPdf} variant="outline" size="sm" className="ml-4 shrink-0">
+                  <FileDown className="mr-2 h-4 w-4" />
+                  PDF
+              </Button>
             </DialogHeader>
             <div className="p-6">
               <div className="grid gap-4">
@@ -99,12 +105,8 @@ function ExtratoDialogContent() {
                   </Table>
               </div>
             </div>
-            <DialogFooter className="bg-muted/50 p-6 rounded-b-lg flex-col sm:flex-row sm:justify-between items-center w-full">
-                <Button onClick={handleDownloadPdf} variant="outline">
-                    <FileDown className="mr-2 h-4 w-4" />
-                    Baixar PDF
-                </Button>
-                <div className="grid gap-2 text-right w-full max-w-xs">
+            <DialogFooter className="bg-muted/50 p-6 rounded-b-lg">
+                <div className="grid gap-2 text-right w-full max-w-xs ml-auto">
                     <div className="flex justify-between items-center gap-4">
                         <p className="font-semibold">Subtotal</p>
                         <p>{(total - invoiceItems.find(item => item.price < 0)!.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
