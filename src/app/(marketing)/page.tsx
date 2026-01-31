@@ -59,7 +59,12 @@ export default function HomePage() {
                 </Button>
             </div>
             <div className="mt-4">
-                <Link href="#" className="text-sm underline hover:text-primary">
+                <Link
+                    href="https://wa.me/5551981446019?text=Vi%20do%20site"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm underline hover:text-primary"
+                >
                     Falar com especialista
                 </Link>
             </div>

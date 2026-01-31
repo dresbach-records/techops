@@ -47,7 +47,7 @@ export function Navbar() {
             ) : (
               <>
                 <Button asChild>
-                  <Link href="/diagnostico">Iniciar diagnóstico</Link>
+                  <Link href="/login">Login</Link>
                 </Button>
               </>
             )}
@@ -84,7 +84,7 @@ export function Navbar() {
                     ) : (
                     <div className="flex flex-col space-y-2">
                         <Button asChild>
-                            <Link href="/diagnostico">Iniciar diagnóstico</Link>
+                            <Link href="/login">Login</Link>
                         </Button>
                     </div>
                     )}
