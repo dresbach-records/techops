@@ -5,6 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DollarSign, CreditCard, Users } from "lucide-react";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const FinanceiroMrrChart = dynamic(
+    () => import('@/components/charts/FinanceiroMrrChart').then(mod => mod.FinanceiroMrrChart),
+    { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> }
+);
+
 
 const overviewCards = [
     { title: "Faturamento (MRR)", value: "R$ 15.872,00", description: "+5.2% vs. mês anterior", icon: <DollarSign /> },
@@ -53,9 +61,7 @@ export default function FinanceiroPage() {
                 <CardTitle>Crescimento do Faturamento Mensal Recorrente (MRR)</CardTitle>
               </CardHeader>
               <CardContent>
-                 <div className="h-[300px] w-full flex items-center justify-center bg-muted rounded-lg">
-                    <p className="text-muted-foreground">Gráfico temporariamente desativado para diagnóstico.</p>
-                 </div>
+                 <FinanceiroMrrChart />
               </CardContent>
           </Card>
           <Card className="lg:col-span-2">
