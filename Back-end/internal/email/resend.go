@@ -39,31 +39,13 @@ func NewResendService() (*ResendService, error) {
 
 // Send sends an email using the Resend API.
 func (r *ResendService) Send(to, subject, htmlBody string) error {
-	// If API key is not set, simulate the email for development/testing.
-	if r.apiKey == "" || r.apiKey == "CHANGE_ME" {
-		log.Printf("--- SIMULATING EMAIL (Resend - API Key not configured) ---\n")
-		log.Printf("From: %s\n", r.from)
-		log.Printf("To: %s\n", to)
-		log.Printf("Subject: %s\n", subject)
-		log.Printf("Body: (HTML content not shown)\n")
-		log.Printf("---------------------------------\n")
-		log.Println("Email not sent because RESEND_API_KEY is not configured.")
-		return nil // Don't return an error for simulation purposes
-	}
-
-	params := &resend.SendEmailRequest{
-		From:    r.from,
-		To:      []string{to},
-		Subject: subject,
-		Html:    htmlBody,
-	}
-
-	sent, err := r.client.Emails.Send(params)
-	if err != nil {
-		// The caller should handle logging.
-		return fmt.Errorf("failed to send email via Resend: %w", err)
-	}
-
-	log.Printf("Successfully sent email to %s via Resend. ID: %s", to, sent.Id)
+	// Temporarily disabled to avoid rate limit errors during testing.
+	// The system will log the email that would have been sent.
+	log.Printf("--- SIMULATING EMAIL (Real sending is temporarily disabled) ---\n")
+	log.Printf("From: %s\n", r.from)
+	log.Printf("To: %s\n", to)
+	log.Printf("Subject: %s\n", subject)
+	log.Printf("Body: (HTML content not shown)\n")
+	log.Printf("---------------------------------\n")
 	return nil
 }
