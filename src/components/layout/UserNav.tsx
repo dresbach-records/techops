@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
-import { LayoutDashboard, LogOut } from "lucide-react";
+import { LayoutDashboard, LogOut, ChevronDown } from "lucide-react";
 
 export function UserNav() {
   const { user, logout } = useAuth();
@@ -33,11 +33,13 @@ export function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-9 w-9">
-            <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.name} />
-            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-          </Avatar>
+        <Button variant="ghost" className="relative h-10 px-2 flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+                <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.name} />
+                <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+            </Avatar>
+            <span className="hidden sm:inline-block font-medium">{user.name}</span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:inline-block" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>

@@ -1,105 +1,212 @@
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Activity, ArrowRight, ClipboardCheck, GitFork, FileText } from "lucide-react";
+import { Briefcase, AlertTriangle, GitFork, CheckCircle, ArrowRight, FileText, Send, User } from "lucide-react";
 import Link from "next/link";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
-const quickLinks = [
-  { href: "/dashboard/diagnostico", label: "Ver Diagnóstico", icon: <ClipboardCheck className="h-4 w-4" /> },
-  { href: "/dashboard/roadmap", label: "Explorar Roadmap", icon: <GitFork className="h-4 w-4" /> },
-  { href: "/dashboard/documentos", label: "Acessar Documentos", icon: <FileText className="h-4 w-4" /> },
+const overviewCards = [
+  {
+    title: "Diagnóstico Técnico",
+    value: "100% Concluído",
+    icon: <Briefcase className="h-6 w-6 text-muted-foreground" />,
+  },
+  {
+    title: "Dores Técnicas",
+    value: "3 Prioridades",
+    icon: <AlertTriangle className="h-6 w-6 text-muted-foreground" />,
+  },
+  {
+    title: "Roadmap Técnico",
+    value: "Arquitetura Inicial",
+    description: "Passo Atual",
+    icon: <GitFork className="h-6 w-6 text-muted-foreground" />,
+  },
+  {
+    title: "Consultoria",
+    value: "Próxima: Seg, 09h",
+    icon: <Briefcase className="h-6 w-6 text-muted-foreground" />,
+  },
 ];
 
-const recentActivity = [
-    {id: 1, description: "Seu Diagnóstico Técnico foi gerado.", date: "Há 2 horas", status: "Concluído"},
-    {id: 2, description: "Questionário de Desafios enviado.", date: "Há 1 dia", status: "Concluído"},
-    {id: 3, description: "Bem-vindo à Tech Lab!", date: "Há 1 dia", status: "Info"},
-]
+const communicationData = [
+  { name: 'Seg', value: 200 },
+  { name: 'Qua', value: 300 },
+  { name: 'Sex', value: 150 },
+  { name: 'Dom', value: 400 },
+  { name: 'Ter', value: 250 },
+];
+
 
 export default function DashboardPage() {
   return (
-    <div className="grid gap-6">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Status do Diagnóstico</CardTitle>
-            <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Completo</div>
-            <p className="text-xs text-muted-foreground">
-              Seu diagnóstico e roadmap estão prontos.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Próxima Etapa do Roadmap</CardTitle>
-            <GitFork className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Refatoração do Módulo de Pagamentos</div>
-            <p className="text-xs text-muted-foreground">
-              Fase 1 - Prioridade Alta
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Consultor Atribuído</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Dr. Alan Turing</div>
-            <p className="text-xs text-muted-foreground">
-              Especialista em Arquitetura de Software
-            </p>
-          </CardContent>
-        </Card>
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-bold font-headline">Bem-vindo, João Pereira</h1>
+        <p className="text-muted-foreground">Seu painel técnico foi montado sob medida com base nas informações que voce nos passou. Vamos atingir suas metas de forma estratégica e segura.</p>
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Acesso Rápido</CardTitle>
-            <CardDescription>Navegue para as seções mais importantes.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            {quickLinks.map((link) => (
-              <Link href={link.href} key={link.href} className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent hover:text-accent-foreground">
-                <div className="flex items-center gap-3">
-                    {link.icon}
-                    <span className="font-medium">{link.label}</span>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {overviewCards.map((card, index) => (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+              {card.icon}
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold">{card.value}</div>
+              {card.description && <p className="text-xs text-muted-foreground">{card.description}</p>}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                        Diagnóstico Técnico
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-start gap-3">
+                         <CheckCircle className="h-5 w-5 text-green-500 mt-1" />
+                        <p className="text-muted-foreground">Seu diagnóstico inicial foi analisado e o diagnóstico técnico completo foi gerado. Vamos irar juntos?</p>
+                    </div>
+                    <div className="border-t pt-4 space-y-2">
+                        <div className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground">Classificação</span>
+                            <span className="font-medium">Estágio: Protótipo</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                             <span className="text-muted-foreground">Complexidade</span>
+                            <span className="font-medium">Média</span>
+                        </div>
+                         <div className="flex justify-between items-center text-sm">
+                             <span className="text-muted-foreground">Risco Técnico</span>
+                            <span className="font-medium">Médio</span>
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-2">
+                        <Badge variant="secondary">Arquitetura Inicial</Badge>
+                        <Badge variant="secondary">Escalabilidade</Badge>
+                        <Badge variant="secondary">Segurança</Badge>
+                    </div>
+                </CardContent>
+                <div className="p-4 border-t flex justify-end">
+                    <Button asChild>
+                        <Link href="/dashboard/diagnostico">Ver Diagnóstico</Link>
+                    </Button>
                 </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground" />
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Atividade Recente</CardTitle>
-            <CardDescription>Acompanhe as últimas atualizações na sua conta.</CardDescription>
-          </CardHeader>
-          <CardContent>
-             <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Descrição</TableHead>
-                        <TableHead>Data</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {recentActivity.map(activity => (
-                        <TableRow key={activity.id}>
-                            <TableCell className="font-medium">{activity.description}</TableCell>
-                            <TableCell className="text-muted-foreground">{activity.date}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+            </Card>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle>Documentos do Projeto</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between p-3 rounded-md border hover:bg-muted/50">
+                        <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-primary" />
+                            <span className="font-medium">Contrato de Consultoria.pdf</span>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                     <div className="flex items-center justify-between p-3 rounded-md border hover:bg-muted/50">
+                        <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-primary" />
+                            <span className="font-medium">Checklist Inicial.docx</span>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                </CardContent>
+                 <div className="p-4 border-t flex justify-end">
+                    <Button variant="outline">+ Novo Documento</Button>
+                </div>
+            </Card>
+
+        </div>
+
+        <div className="lg:col-span-1 space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Próximos Passos</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <div className="flex items-start gap-3">
+                             <CheckCircle className="h-5 w-5 text-green-500 mt-1 flex-shrink-0"/>
+                            <div>
+                                <div className="flex items-center justify-between">
+                                    <h4 className="font-semibold">Revisar Arquitetura Inicial</h4>
+                                    <Badge variant="default" className="bg-green-600">Seguindo</Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">Segunda-feira, 09:00. Detalhar setup inicial e validar segurança do sistema.</p>
+                            </div>
+                        </div>
+                    </div>
+                     <div className="space-y-2">
+                        <div className="flex items-start gap-3">
+                            <CheckCircle className="h-5 w-5 text-muted-foreground mt-1 flex-shrink-0"/>
+                             <div>
+                                <div className="flex items-center justify-between">
+                                    <h4 className="font-semibold">Planejar Escalabilidade</h4>
+                                    <Button variant="secondary" size="sm">Confirmar</Button>
+                                </div>
+                                <p className="text-sm text-muted-foreground">Definir estratégias para o crescimento seguro do sistema.</p>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+                 <div className="p-4 border-t flex justify-end">
+                    <Button asChild>
+                        <Link href="/dashboard/roadmap">Ver Roadmap</Link>
+                    </Button>
+                </div>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Comunicação com Tech Lab</CardTitle>
+                </CardHeader>
+                 <CardContent>
+                    <div className="h-24">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={communicationData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                                <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ fontSize: '12px', borderRadius: '0.5rem' }} />
+                                <Bar dataKey="value" fill="#16a34a" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div className="mt-4 space-y-3">
+                         <div className="flex items-start gap-3">
+                             <Avatar className="h-8 w-8 border">
+                                <AvatarImage src="https://avatar.vercel.sh/lucas.png" alt="Lucas" />
+                                <AvatarFallback>LC</AvatarFallback>
+                            </Avatar>
+                            <div className="bg-muted p-3 rounded-lg rounded-tl-none w-full">
+                                <p className="text-sm font-semibold">Lucas (Consultor)</p>
+                                <p className="text-sm text-muted-foreground">Olá João! Podemos agendar 30 minutos na terça para detalhar a escalabilidade?</p>
+                            </div>
+                        </div>
+                         <div className="relative">
+                            <Input placeholder="Digite uma mensagem..." className="pr-10"/>
+                            <Button size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8">
+                                <Send className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
       </div>
     </div>
   );

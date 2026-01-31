@@ -1,33 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from 'next/navigation';
 import { AuthGuard } from "@/components/auth/AuthGuard";
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { LayoutDashboard, ClipboardCheck, GitFork, FileText, MessageSquare, PanelLeft } from "lucide-react";
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
+import { LayoutDashboard, ClipboardCheck, GitFork, FileText, Briefcase, PanelLeft, Menu, Bell, HelpCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserNav } from "@/components/layout/UserNav";
-import { ChatWidget } from "@/components/layout/ChatWidget";
 import React from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 const navItems = [
     { href: "/dashboard", label: "Visão Geral", icon: <LayoutDashboard /> },
-    { href: "/dashboard/diagnostico", label: "Diagnóstico", icon: <ClipboardCheck /> },
+    { href: "/dashboard/diagnostico", label: "Diagnóstico Técnico", icon: <ClipboardCheck /> },
     { href: "/dashboard/roadmap", label: "Roadmap", icon: <GitFork /> },
+    { href: "/dashboard/consultoria", label: "Consultoria", icon: <Briefcase /> },
     { href: "/dashboard/documentos", label: "Documentos", icon: <FileText /> },
-    { href: "/dashboard/suporte", label: "Suporte", icon: <MessageSquare /> },
 ];
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const { open, setOpen } = useSidebar();
+    const state = open ? 'expanded' : 'collapsed';
 
     const sidebarContent = (
          <>
-            <SidebarHeader>
-                <Link href="/" className="flex items-center justify-center p-2">
-                    <Image src="/logotech.png" alt="Tech Lab Logo" width={500} height={500} className="size-20" />
+            <SidebarHeader className="group-data-[state=collapsed]:hidden justify-between">
+                <Link href="/" className="flex items-center gap-3 p-4">
+                    <div className="bg-primary h-8 w-8 rounded-md flex items-center justify-center">
+                       <Shield className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <span className="font-headline text-lg font-semibold text-primary-foreground">Tech Lab</span>
                 </Link>
             </SidebarHeader>
             <SidebarContent>
@@ -37,27 +41,40 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                             <SidebarMenuButton
                                 asChild
                                 isActive={pathname === item.href}
+                                tooltip={{children: item.label}}
                             >
                                 <Link href={item.href}>
                                     {item.icon}
-                                    <span>{item.label}</span>
+                                    <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     ))}
                 </SidebarMenu>
             </SidebarContent>
+             <footer className="mt-auto border-t border-sidebar-border p-4 group-data-[state=collapsed]:hidden">
+                <div className="text-center text-xs text-muted-foreground">
+                    <p>© 2024 Tech Lab</p>
+                </div>
+            </footer>
         </>
     );
 
     return (
-        <SidebarProvider>
-            <Sidebar collapsible="icon" className="hidden md:flex">
-               {sidebarContent}
-            </Sidebar>
+        <>
+            <aside 
+                data-state={state} 
+                data-collapsible={"icon"}
+                className={cn(
+                    "hidden md:flex flex-col bg-sidebar border-r transition-[width] duration-300 group overflow-y-auto",
+                    state === 'expanded' ? 'w-64' : 'w-[60px]'
+                )}
+            >
+                {sidebarContent}
+            </aside>
 
-            <div className="flex-1 flex flex-col">
-                <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4 md:px-6">
+            <div className="flex-1 flex flex-col min-h-screen">
+                <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
                     <Sheet>
                         <SheetTrigger asChild>
                             <Button
@@ -65,36 +82,53 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                                 size="icon"
                                 className="shrink-0 md:hidden"
                             >
-                                <PanelLeft className="h-5 w-5" />
+                                <Menu className="h-5 w-5" />
                                 <span className="sr-only">Toggle navigation menu</span>
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="left" className="flex flex-col p-0">
-                           <Sidebar className="flex h-full">
+                        <SheetContent side="left" className="flex flex-col p-0 bg-sidebar">
+                           <div className="flex h-full flex-col group" data-state="expanded">
                                 {sidebarContent}
-                           </Sidebar>
+                           </div>
                         </SheetContent>
                     </Sheet>
-                    <div className="w-full flex-1">
-                        {/* Can add breadcrumbs or search here */}
+                     <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hidden md:flex"
+                        onClick={() => setOpen(!open)}
+                    >
+                        <PanelLeft className="h-5 w-5" />
+                    </Button>
+                    <div className="w-full flex-1 flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Bell className="h-4 w-4" />
+                        </Button>
+                         <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <HelpCircle className="h-4 w-4" />
+                        </Button>
+                        <UserNav />
                     </div>
-                    <UserNav />
                 </header>
-                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-muted/40">
+                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-muted/40 overflow-y-auto">
                     {children}
                 </main>
+                 <footer className="p-4 border-t text-center text-xs text-muted-foreground bg-background">
+                    © 2024 Tech Lab | <Link href="/privacidade" className="hover:underline">Política de Privacidade</Link> | <Link href="/termos-de-servico" className="hover:underline">Termos de Serviço</Link> | <Link href="/privacidade" className="hover:underline">Exclusão de Dados do Usuário</Link>
+                </footer>
             </div>
-            <ChatWidget />
-        </SidebarProvider>
+        </>
     );
 }
 
-// The AuthGuard will be re-enabled once the new authentication flow is complete.
-// For now, we allow access to the dashboard to facilitate development.
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
         // <AuthGuard access="paid">
-            <DashboardLayoutContent>{children}</DashboardLayoutContent>
+            <SidebarProvider>
+                <div className="flex min-h-screen">
+                    <DashboardLayoutContent>{children}</DashboardLayoutContent>
+                </div>
+            </SidebarProvider>
         // </AuthGuard>
     );
 }
