@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"strconv"
 	"strings"
+	"techlab/bot/core"
 )
 
 // ProcessMessage is the core of the state machine.
 // It takes the current state, a message, and session data, and returns the response and the next state.
-func ProcessMessage(currentState State, message Message, sessionData SessionData) (string, State, SessionData) {
+func ProcessMessage(ctx context.Context, coreClient core.CoreClient, currentState State, message Message, sessionData SessionData) (string, State, SessionData) {
 	userInput := strings.ToLower(strings.TrimSpace(message.Text.Body))
 
 	// Universal command to go back to the main menu
@@ -35,10 +39,21 @@ func ProcessMessage(currentState State, message Message, sessionData SessionData
 	case StateAcompanhamentoAskEmail:
 		// User input is the email.
 		email := userInput
-		// Mock a backend call to get the user's status based on the email.
-		status, flow := getMockUserStatus(email)
+
+		// REAL API CALL to the core backend to get the user's status.
+		status, err := coreClient.GetProjectStatusByEmail(ctx, email)
+		if err != nil {
+			log.Printf("ERROR: Failed to get project status for email %s: %v", email, err)
+			// Handle specific errors for user-friendly messages
+			if strings.Contains(err.Error(), "user_not_found") {
+				return "Não encontramos um projeto com este e-mail. Por favor, verifique se digitou corretamente ou inicie um novo diagnóstico.", StateAcompanhamentoAskEmail, sessionData
+			}
+			// Generic error for timeouts or other backend issues
+			return "Tivemos um problema para consultar seu projeto e nossa equipe já foi notificada. Por favor, tente novamente em alguns instantes.", StateMainMenu, SessionData{}
+		}
+
 		// Build a response based on the status.
-		statusResponse := buildStatusResponse(status, flow)
+		statusResponse := buildStatusResponse(status)
 
 		// Always finish with a feedback question.
 		return statusResponse + "\n\n" + getFeedbackQuestion(sessionData.LastFeedbackFlow), StateFeedbackAsk, sessionData
@@ -103,32 +118,18 @@ func processMainMenu(userInput string) (string, State, SessionData) {
 	return responseText, nextState, sessionData
 }
 
-// getMockUserStatus simulates a call to the main backend API to fetch user status.
-func getMockUserStatus(email string) (status string, flow string) {
-	// In a real scenario, this would be an API call to the core Go backend.
-	// For example: status, flow, err := coreAPI.GetUserStatusByEmail(email)
-
-	// Mock logic for demonstration purposes for Sprint 2.
-	switch {
-	case strings.Contains(email, "ativo"), strings.Contains(email, "pago"):
-		return "ativo", "painel"
-	case strings.Contains(email, "pagamento"):
-		return "pagamento_pendente", "pagamento"
-	default:
-		return "pagamento_pendente", "diagnostico"
-	}
-}
-
 // buildStatusResponse creates a user-friendly message based on their status from the core backend.
-func buildStatusResponse(status, flow string) string {
-	switch {
-	case status == "ativo" && flow == "painel":
+func buildStatusResponse(status *core.ProjectStatus) string {
+	// The 'flow' field from the core API determines the user's next action.
+	switch status.NextStep {
+	case "painel":
 		return "✅ Ótima notícia! Seu pagamento foi confirmado e seu painel personalizado já está liberado.\n\nAcesse seu dashboard em: https://[URL_DO_SEU_FRONTEND]/dashboard"
-	case status == "pagamento_pendente" && flow == "pagamento":
+	case "pagamento":
 		return "Verificamos que seu diagnóstico foi concluído e estamos apenas aguardando a confirmação do pagamento para liberar seu painel.\n\nVocê pode finalizar o pagamento aqui: https://[URL_DO_SEU_FRONTEND]/diagnostico/10-pagamento"
-	case status == "pagamento_pendente" && flow == "diagnostico":
+	case "diagnostico":
 		return "Encontrei seu cadastro. Parece que você iniciou o diagnóstico mas ainda não o finalizou.\n\nContinue de onde parou em: https://[URL_DO_SEU_FRONTEND]/diagnostico"
 	default:
+		// This case also handles if the user is not found, although the error is caught before.
 		return "Não consegui encontrar um projeto ou diagnóstico ativo para o e-mail informado. Por favor, verifique o e-mail ou tente iniciar um novo diagnóstico no menu principal."
 	}
 }

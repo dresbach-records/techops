@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+	"techlab/bot/core"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,13 +16,15 @@ import (
 type BotHandler struct {
 	StateManager   StateManager
 	WhatsAppClient WhatsAppClient
+	CoreClient     core.CoreClient // Add CoreClient
 }
 
 // NewBotHandler creates a new bot handler.
-func NewBotHandler(sm StateManager, wac WhatsAppClient) *BotHandler {
+func NewBotHandler(sm StateManager, wac WhatsAppClient, cc core.CoreClient) *BotHandler {
 	return &BotHandler{
 		StateManager:   sm,
 		WhatsAppClient: wac,
+		CoreClient:     cc, // Inject CoreClient
 	}
 }
 
@@ -68,7 +72,8 @@ func (h *BotHandler) HandleWebhook(c *gin.Context) {
 			log.Printf("INFO: User %s [State: %s] | Received: '%s'", userPhone, currentState, message.Text.Body)
 
 			// Process the message to get the response and next state
-			response, nextState, nextSessionData := ProcessMessage(currentState, message, sessionData)
+			// Pass the CoreClient and a context to the message processor
+			response, nextState, nextSessionData := ProcessMessage(context.Background(), h.CoreClient, currentState, message, sessionData)
 
 			// Universal Feedback Handling
 			// If the previous state was asking for feedback, and the next state is back to menu, it means feedback was given.
