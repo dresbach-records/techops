@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -60,24 +62,37 @@ func (h *BotHandler) HandleWebhook(c *gin.Context) {
 		if change.Field == "messages" && len(change.Value.Messages) > 0 {
 			message := change.Value.Messages[0]
 			userPhone := message.From
-			
-			// Get current user state
-			currentState := h.StateManager.GetState(userPhone)
-			log.Printf("User %s is in state '%s', received message: '%s'", userPhone, currentState, message.Text.Body)
 
-			// Process the message based on the current state and get the next state
-			response, nextState := ProcessMessage(currentState, message)
+			// Get current user state and session data
+			currentState, sessionData := h.StateManager.GetState(userPhone)
+			log.Printf("INFO: User %s [State: %s] | Received: '%s'", userPhone, currentState, message.Text.Body)
+
+			// Process the message to get the response and next state
+			response, nextState, nextSessionData := ProcessMessage(currentState, message, sessionData)
+
+			// Universal Feedback Handling
+			// If the previous state was asking for feedback, and the next state is back to menu, it means feedback was given.
+			if currentState == StateFeedbackAsk && nextState == StateMainMenu {
+				rating, err := strconv.Atoi(strings.TrimSpace(message.Text.Body))
+				if err == nil && rating > 0 {
+					// Save the feedback using the context stored in the session
+					err := h.StateManager.SaveFeedback(userPhone, sessionData.LastFeedbackFlow, rating)
+					if err != nil {
+						log.Printf("ERROR: Failed to save feedback for user %s: %v", userPhone, err)
+					}
+				}
+			}
 
 			// Send the response back to the user
 			if err := h.WhatsAppClient.SendTextMessage(userPhone, response); err != nil {
 				log.Printf("ERROR: Failed to send message to %s: %v", userPhone, err)
 			} else {
-				log.Printf("Sent response to %s: '%s'", userPhone, response)
+				log.Printf("INFO: User %s [State: %s] | Replied: '%s'", userPhone, nextState, response)
 			}
 
-			// Update the user's state
-			h.StateManager.SetState(userPhone, nextState)
-			log.Printf("Transitioned user %s to state '%s'", userPhone, nextState)
+			// Update the user's state and session data
+			h.StateManager.SetState(userPhone, nextState, nextSessionData)
+			log.Printf("INFO: User %s | State transition: %s -> %s", userPhone, currentState, nextState)
 		}
 	}
 

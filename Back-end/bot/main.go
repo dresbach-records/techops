@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"os"
 
@@ -15,8 +16,20 @@ func main() {
 		log.Println("Warning: .env file not found, relying on environment variables.")
 	}
 
-	// Initialize the state manager and WhatsApp client
-	stateManager := NewInMemoryStateManager()
+	var stateManager StateManager
+	var db *sql.DB
+
+	// Attempt to connect to the database
+	db, err = Connect()
+	if err != nil {
+		log.Printf("WARNING: Could not connect to database: %v. Falling back to in-memory state.", err)
+		stateManager = NewInMemoryStateManager()
+	} else {
+		// If DB connection is successful, use the SQL-backed state manager
+		defer db.Close()
+		stateManager = NewSQLStateManager(db)
+	}
+
 	whatsAppClient := NewWhatsAppClient(os.Getenv("WHATSAPP_GRAPH_API_TOKEN"), os.Getenv("WHATSAPP_PHONE_NUMBER_ID"))
 	botHandler := NewBotHandler(stateManager, whatsAppClient)
 

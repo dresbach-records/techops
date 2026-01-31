@@ -1,51 +1,92 @@
 package main
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 // ProcessMessage is the core of the state machine.
-// It takes the current state and a message, and returns the response and the next state.
-func ProcessMessage(currentState State, message Message) (string, State) {
+// It takes the current state, a message, and session data, and returns the response and the next state.
+func ProcessMessage(currentState State, message Message, sessionData SessionData) (string, State, SessionData) {
+	userInput := strings.ToLower(strings.TrimSpace(message.Text.Body))
+
 	// Universal command to go back to the main menu
-	if strings.ToLower(message.Text.Body) == "menu" {
-		return getMainMenuText(), StateMainMenu
+	if userInput == "menu" {
+		// Before resetting, ask for feedback if they were in a flow
+		if sessionData.LastFeedbackFlow != "" {
+			return getFeedbackQuestion(sessionData.LastFeedbackFlow), StateFeedbackAsk, sessionData
+		}
+		return getMainMenuText(), StateMainMenu, SessionData{}
 	}
 
 	switch currentState {
 	case StateStart:
-		// Any initial message brings the user to the main menu.
-		return getMainMenuText(), StateMainMenu
+		return getMainMenuText(), StateMainMenu, SessionData{}
 
 	case StateMainMenu:
-		return processMainMenu(message.Text.Body)
+		return processMainMenu(userInput)
 
-	// TODO: Implement other state handlers (Diagnostico, Suporte, etc.)
-	// case StateDiagnostico:
-	//     return processDiagnostico(message.Text.Body)
+	// --- Fluxo de Diagnóstico ---
+	case StateDiagnostico:
+		sessionData.LastFeedbackFlow = "diagnostico"
+		return getDiagnosisQuestion(), StateDiagnostico, sessionData // Simple, one-step diagnosis for now
+
+	// --- Outros Fluxos (com término em feedback) ---
+	case StateAcompanhamento, StateHumano, StatePlanosPagamento, StateSuporte, StateSobre:
+		// Mock response for any of these flows, leading directly to feedback.
+		flowName := strings.ToLower(string(currentState))
+		sessionData.LastFeedbackFlow = flowName
+		return getMockFlowResponse(currentState) + "\n\n" + getFeedbackQuestion(flowName), StateFeedbackAsk, sessionData
+
+	// --- Fluxo de Feedback Universal ---
+	case StateFeedbackAsk:
+		rating, err := strconv.Atoi(userInput)
+		if err != nil || rating < 1 || rating > 4 {
+			return "Por favor, digite um número de 1 a 4.\n\n" + getFeedbackQuestion(sessionData.LastFeedbackFlow), StateFeedbackAsk, sessionData
+		}
+		// The handler will save the feedback. We just thank the user and reset.
+		return getFeedbackThanksText(), StateMainMenu, SessionData{}
 
 	default:
 		// If in an unknown state, reset to the main menu.
-		return "Desculpe, não entendi. Voltando ao menu principal.\n\n" + getMainMenuText(), StateMainMenu
+		return "Desculpe, não entendi. Voltando ao menu principal.\n\n" + getMainMenuText(), StateMainMenu, SessionData{}
 	}
 }
 
 // processMainMenu handles user input when they are in the main menu.
-func processMainMenu(userInput string) (string, State) {
-	switch strings.TrimSpace(userInput) {
+func processMainMenu(userInput string) (string, State, SessionData) {
+	// Reset any previous flow context when returning to the menu
+	var sessionData SessionData
+	var responseText string
+	var nextState State
+
+	switch userInput {
 	case "1":
-		return "Iniciando o fluxo de Diagnóstico Técnico...", StateDiagnostico
+		responseText = "Iniciando o fluxo de Diagnóstico Técnico..."
+		nextState = StateDiagnostico
 	case "2":
-		return "Iniciando o fluxo de Acompanhamento de Projeto...", StateAcompanhamento
+		responseText = "Iniciando o fluxo de Acompanhamento de Projeto..."
+		nextState = StateAcompanhamento
 	case "3":
-		return "Iniciando a transferência para um consultor...", StateHumano
+		responseText = "Iniciando a transferência para um consultor..."
+		nextState = StateHumano
 	case "4":
-		return "Mostrando informações sobre Planos e Pagamentos...", StatePlanosPagamento
+		responseText = "Mostrando informações sobre Planos e Pagamentos..."
+		nextState = StatePlanosPagamento
 	case "5":
-		return "Iniciando o fluxo de Suporte Técnico...", StateSuporte
+		responseText = "Iniciando o fluxo de Suporte Técnico..."
+		nextState = StateSuporte
 	case "6":
-		return "A Tech Lab é uma consultoria de engenharia de software...\n\nComo posso ajudar?", StateSobre
+		responseText = "A Tech Lab é uma consultoria de engenharia de software..."
+		nextState = StateSobre
 	default:
-		return "Opção inválida. Por favor, escolha um número de 1 a 6.\n\n" + getMainMenuText(), StateMainMenu
+		responseText = "Opção inválida. Por favor, escolha um número de 1 a 6.\n\n" + getMainMenuText()
+		nextState = StateMainMenu
+		return responseText, nextState, sessionData // Return immediately for invalid option
 	}
+	// For valid options, we set the LastFeedbackFlow to trigger feedback later
+	sessionData.LastFeedbackFlow = strings.ToLower(string(nextState))
+	return responseText, nextState, sessionData
 }
 
 // getMainMenuText returns the standard main menu message.
@@ -63,4 +104,33 @@ Como posso te ajudar hoje?
 6️⃣ Sobre a Tech Lab
 
 Digite "menu" a qualquer momento para voltar aqui.`
+}
+
+func getDiagnosisQuestion() string {
+	// In a real scenario, this would be a multi-step process.
+	// For now, we'll just give a concluding message and ask for feedback.
+	return `✅ Diagnóstico iniciado.
+
+Estamos analisando suas respostas para indicar o melhor caminho técnico.`
+}
+
+func getMockFlowResponse(state State) string {
+	switch state {
+	case StateSobre:
+		return "A Tech Lab é uma consultoria de engenharia de software que transforma tecnologia em resultado."
+	default:
+		return "Esta função está sendo implementada e estará disponível em breve."
+	}
+}
+
+func getFeedbackQuestion(flow string) string {
+	question := "Como você avalia essa interação?"
+	return question + "\n\n1- Ótima\n2- Boa\n3- Regular\n4- Ruim"
+}
+
+func getFeedbackThanksText() string {
+	return `Obrigado pela sua avaliação!
+Ela nos ajuda a melhorar nosso atendimento.
+
+Se precisar de algo mais, é só me chamar 😊`
 }
