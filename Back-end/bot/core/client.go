@@ -38,4 +38,5 @@ type CoreClient interface {
 	GetProjectStatusByEmail(ctx context.Context, email string) (*ProjectStatus, error)
 	GetPagamentoStatus(ctx context.Context, userID string) (*PagamentoStatus, error)
 	GetPainelStatus(ctx context.Context, userID string) (*PainelStatus, error)
+	Ping(ctx context.Context) error
 }

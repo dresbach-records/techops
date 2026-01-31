@@ -2,15 +2,38 @@ package main
 
 import (
 	"context"
-	"log"
+	"crypto/rand"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"techlab/bot/core"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+// logJSON is a helper for structured JSON logging.
+func logJSON(fields map[string]interface{}) {
+	fields["service"] = "techlab-bot"
+	fields["timestamp"] = time.Now().UTC().Format(time.RFC3339)
+	jsonLog, err := json.Marshal(fields)
+	if err != nil {
+		fmt.Fprintf(os.Stdout, `{"level":"error", "service":"techlab-bot", "error":"failed to marshal log", "original_error":"%v"}\n`, err)
+		return
+	}
+	fmt.Fprintln(os.Stdout, string(jsonLog))
+}
+
+// newRequestID generates a simple pseudo-random request ID.
+func newRequestID() string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)
+}
+
 
 // BotHandler handles incoming webhook requests.
 type BotHandler struct {
@@ -36,26 +59,39 @@ func (h *BotHandler) VerifyWebhook(c *gin.Context) {
 
 	verifyToken := os.Getenv("WHATSAPP_VERIFY_TOKEN")
 	if verifyToken == "" {
-		log.Println("CRITICAL: WHATSAPP_VERIFY_TOKEN is not set.")
+		logJSON(map[string]interface{}{"level": "error", "error": "WHATSAPP_VERIFY_TOKEN is not set"})
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Bot not configured"})
 		return
 	}
 
 	if mode == "subscribe" && token == verifyToken {
-		log.Println("SUCCESS: WhatsApp Webhook verification successful.")
+		logJSON(map[string]interface{}{"level": "info", "action": "webhook_verification", "status": "success"})
 		c.String(http.StatusOK, challenge)
 		return
 	}
 
-	log.Printf("ERROR: WhatsApp Webhook verification failed. Mode: '%s', Received Token: '%s'", mode, token)
+	logJSON(map[string]interface{}{
+		"level":          "error",
+		"action":         "webhook_verification",
+		"status":         "failed",
+		"received_mode":  mode,
+		"received_token": token,
+	})
 	c.JSON(http.StatusForbidden, gin.H{"error": "Invalid verify token"})
 }
 
 // HandleWebhook processes incoming messages from users.
 func (h *BotHandler) HandleWebhook(c *gin.Context) {
+	requestID := newRequestID()
+
 	var payload WhatsAppWebhookPayload
 	if err := c.ShouldBindJSON(&payload); err != nil {
-		log.Printf("ERROR: Failed to parse webhook payload: %v", err)
+		logJSON(map[string]interface{}{
+			"level":      "error",
+			"request_id": requestID,
+			"error":      "failed to parse webhook payload",
+			"details":    err.Error(),
+		})
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
 		return
 	}
@@ -67,54 +103,81 @@ func (h *BotHandler) HandleWebhook(c *gin.Context) {
 			message := change.Value.Messages[0]
 			userPhone := message.From
 
-			// Idempotency Check: if message has been processed, skip.
+			// Idempotency Check
 			isProcessed, err := h.StateManager.IsMessageProcessed(message.ID)
 			if err != nil {
-				log.Printf("ERROR: Failed to check message idempotency for ID %s: %v", message.ID, err)
-				// Continue processing but be aware of potential duplicates.
+				logJSON(map[string]interface{}{
+					"level":      "error",
+					"request_id": requestID,
+					"phone":      userPhone,
+					"message_id": message.ID,
+					"error":      "failed to check message idempotency",
+					"details":    err.Error(),
+				})
 			}
 			if isProcessed {
-				log.Printf("INFO: Duplicate message ID %s received. Skipping processing.", message.ID)
+				logJSON(map[string]interface{}{
+					"level":      "info",
+					"request_id": requestID,
+					"phone":      userPhone,
+					"message_id": message.ID,
+					"status":     "duplicate_message_skipped",
+				})
 				c.Status(http.StatusOK)
 				return
 			}
 
-
-			// Get current user state and session data
+			// Get current user state
 			currentState, sessionData := h.StateManager.GetState(userPhone)
-			log.Printf("INFO: User %s [State: %s] | Received: '%s'", userPhone, currentState, message.Text.Body)
+			
+			logJSON(map[string]interface{}{
+				"level":         "info",
+				"request_id":    requestID,
+				"phone":         userPhone,
+				"message_id":    message.ID,
+				"current_state": currentState,
+				"action":        "message_received",
+				"message_body":  message.Text.Body,
+			})
 
-			// Process the message to get the response and next state
-			// Pass the CoreClient and a context to the message processor
+
+			// Process the message
 			response, nextState, nextSessionData := ProcessMessage(context.Background(), h.CoreClient, currentState, message, sessionData)
 
 			// Universal Feedback Handling
-			// If the previous state was asking for feedback, and the next state is back to menu, it means feedback was given.
 			if currentState == StateFeedbackAsk && nextState == StateMainMenu {
 				rating, err := strconv.Atoi(strings.TrimSpace(message.Text.Body))
 				if err == nil && rating > 0 {
-					// Save the feedback using the context stored in the session
 					err := h.StateManager.SaveFeedback(userPhone, sessionData.LastFeedbackFlow, rating)
 					if err != nil {
-						log.Printf("ERROR: Failed to save feedback for user %s: %v", userPhone, err)
+						logJSON(map[string]interface{}{"level": "error", "request_id": requestID, "phone": userPhone, "error": "failed to save feedback", "details": err.Error()})
+					} else {
+						logJSON(map[string]interface{}{"level": "info", "request_id": requestID, "phone": userPhone, "action": "feedback_saved", "flow": sessionData.LastFeedbackFlow, "rating": rating})
 					}
 				}
 			}
 
-			// Send the response back to the user
+			// Send response
 			if err := h.WhatsAppClient.SendTextMessage(userPhone, response); err != nil {
-				log.Printf("ERROR: Failed to send message to %s: %v", userPhone, err)
-			} else {
-				log.Printf("INFO: User %s [State: %s] | Replied: '%s'", userPhone, nextState, response)
+				logJSON(map[string]interface{}{"level": "error", "request_id": requestID, "phone": userPhone, "error": "failed to send whatsapp message", "details": err.Error()})
 			}
 
-			// Update the user's state and session data
+			// Update state
+			if currentState != nextState {
+				logJSON(map[string]interface{}{
+					"level":        "info",
+					"request_id":   requestID,
+					"phone":        userPhone,
+					"action":       "state_transition",
+					"from_state":   currentState,
+					"to_state":     nextState,
+				})
+			}
 			h.StateManager.SetState(userPhone, nextState, nextSessionData)
-			log.Printf("INFO: User %s | State transition: %s -> %s", userPhone, currentState, nextState)
 			
-			// Mark message as processed for idempotency
+			// Mark as processed
 			if err := h.StateManager.MarkMessageAsProcessed(message.ID); err != nil {
-				log.Printf("ERROR: Failed to mark message ID %s as processed: %v", message.ID, err)
+				logJSON(map[string]interface{}{"level": "error", "request_id": requestID, "phone": userPhone, "message_id": message.ID, "error": "failed to mark message as processed", "details": err.Error()})
 			}
 		}
 	}

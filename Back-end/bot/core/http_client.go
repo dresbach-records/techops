@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 )
 
@@ -38,14 +38,37 @@ func newRequestID() string {
 	return fmt.Sprintf("%x", b)
 }
 
+// logJSON is a helper for structured JSON logging.
+func logJSON(fields map[string]interface{}) {
+	fields["service"] = "techlab-bot"
+	fields["timestamp"] = time.Now().UTC().Format(time.RFC3339)
+	jsonLog, err := json.Marshal(fields)
+	if err != nil {
+		fmt.Fprintf(os.Stdout, `{"level":"error", "service":"techlab-bot", "error":"failed to marshal log", "original_error":"%v"}\n`, err)
+		return
+	}
+	fmt.Fprintln(os.Stdout, string(jsonLog))
+}
+
 // doRequest is a helper to execute HTTP requests to the core API.
 func (c *HTTPClient) doRequest(ctx context.Context, method, path string, output interface{}) error {
 	requestID := newRequestID()
 	u := c.baseURL + path
 
+	logFields := map[string]interface{}{
+		"level":      "info",
+		"request_id": requestID,
+		"action":     "core_api_request",
+		"method":     method,
+		"endpoint":   path,
+	}
+
 	req, err := http.NewRequestWithContext(ctx, method, u, nil)
 	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
+		logFields["level"] = "error"
+		logFields["error"] = fmt.Sprintf("failed to create request: %v", err)
+		logJSON(logFields)
+		return err
 	}
 
 	req.Header.Set("Authorization", "Bearer "+c.apiKey)
@@ -53,29 +76,39 @@ func (c *HTTPClient) doRequest(ctx context.Context, method, path string, output 
 	req.Header.Set("X-Source", "techlab-bot")
 	req.Header.Set("X-Request-Id", requestID)
 
-	log.Printf("INFO: CoreClient request [%s] to %s %s", requestID, method, u)
 	startTime := time.Now()
 
 	resp, err := c.client.Do(req)
+	latency := time.Since(startTime)
+
+	logFields["latency_ms"] = latency.Milliseconds()
+
 	if err != nil {
-		return fmt.Errorf("failed to execute request: %w", err)
+		logFields["level"] = "error"
+		logFields["error"] = fmt.Sprintf("failed to execute request: %v", err)
+		logJSON(logFields)
+		return err
 	}
 	defer resp.Body.Close()
 
-	latency := time.Since(startTime)
-	log.Printf("INFO: CoreClient response [%s] from %s %s -> Status: %d, Latency: %s", requestID, method, u, resp.StatusCode, latency)
-
-	if resp.StatusCode == http.StatusNotFound {
-		return fmt.Errorf("user_not_found")
-	}
-
-	body, _ := io.ReadAll(resp.Body)
-	// Reset body for JSON decoder
-	resp.Body = io.NopCloser(bytes.NewBuffer(body))
+	logFields["status_code"] = resp.StatusCode
 
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("core_api_error status %d: %s", resp.StatusCode, string(body))
+		logFields["level"] = "warning"
+		body, _ := io.ReadAll(resp.Body)
+		logFields["error"] = fmt.Sprintf("core_api_error status %d: %s", resp.StatusCode, string(body))
+		logJSON(logFields)
+
+		// Reset body for JSON decoder if needed later
+		resp.Body = io.NopCloser(bytes.NewBuffer(body))
+
+		if resp.StatusCode == http.StatusNotFound {
+			return fmt.Errorf("user_not_found")
+		}
+		return fmt.Errorf("core_api_error status %d", resp.StatusCode)
 	}
+
+	logJSON(logFields)
 
 	if output != nil {
 		if err := json.NewDecoder(resp.Body).Decode(output); err != nil {
@@ -85,7 +118,6 @@ func (c *HTTPClient) doRequest(ctx context.Context, method, path string, output 
 
 	return nil
 }
-
 
 // GetProjectStatusByEmail fetches the user's current status from the core API.
 func (c *HTTPClient) GetProjectStatusByEmail(
@@ -127,4 +159,9 @@ func (c *HTTPClient) GetPainelStatus(
 		return nil, err
 	}
 	return &out, nil
+}
+
+// Ping checks the health of the core API.
+func (c *HTTPClient) Ping(ctx context.Context) error {
+	return c.doRequest(ctx, http.MethodGet, "/health", nil)
 }
