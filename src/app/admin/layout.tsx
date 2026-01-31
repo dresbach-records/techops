@@ -8,7 +8,7 @@ import {
     LayoutDashboard, Users, ClipboardCheck, Briefcase, Columns, Cpu, Server, CircleDollarSign, FileText, Shield, Settings, PanelLeft 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { UserNav } from "@/components/layout/UserNav";
+import { AdminUserNav } from "@/components/layout/AdminUserNav";
 import React from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -84,7 +84,7 @@ function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }
                     <div className="w-full flex-1">
                        <h1 className="font-semibold text-lg">Painel Administrativo Tech Lab</h1>
                     </div>
-                    <UserNav />
+                    <AdminUserNav />
                 </header>
                 <main className="flex-1 p-4 md:p-6 lg:p-8 bg-muted/40">
                     {children}
