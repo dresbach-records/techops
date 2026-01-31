@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { 
     SidebarProvider, 
     useSidebar,
-    SidebarHeader, 
     SidebarContent, 
     SidebarMenu, 
     SidebarMenuItem, 
@@ -14,12 +13,13 @@ import {
     SidebarFooter 
 } from "@/components/ui/sidebar";
 import { 
-    LayoutDashboard, Users, ClipboardCheck, Briefcase, Columns, Cpu, Server, AreaChart, FileText, Shield, PanelLeft, Menu, Bell, HelpCircle
+    LayoutDashboard, Users, ClipboardCheck, Briefcase, Columns, Cpu, Server, AreaChart, FileText, Shield, PanelLeft, Menu, Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminUserNav } from "@/components/layout/AdminUserNav";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const navItems = [
     { href: "/admin", label: "Visão Geral", icon: <LayoutDashboard /> },
@@ -39,12 +39,7 @@ function AdminSidebarContent() {
     
     return (
         <>
-            <SidebarHeader className="group-data-[state=collapsed]:hidden">
-                <Link href="/admin" className="flex items-center gap-2 p-4">
-                    <h1 className="text-xl font-bold text-primary font-headline">TECH LAB</h1>
-                </Link>
-            </SidebarHeader>
-            <SidebarContent>
+            <SidebarContent className="pt-6">
                 <SidebarMenu>
                     {navItems.map((item) => (
                         <SidebarMenuItem key={item.href}>
@@ -63,11 +58,6 @@ function AdminSidebarContent() {
                     ))}
                 </SidebarMenu>
             </SidebarContent>
-            <SidebarFooter className="mt-auto group-data-[state=collapsed]:hidden">
-                <div className="text-xs text-muted-foreground p-4">
-                    TECH LAB © 2024
-                </div>
-            </SidebarFooter>
         </>
     )
 }
@@ -77,8 +67,13 @@ function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }
     const state = open ? 'expanded' : 'collapsed';
 
     return (
-        <div className="flex min-h-screen flex-col bg-background">
+        <div className="flex flex-col h-screen bg-background">
             <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-4 border-b bg-background px-4 md:px-6">
+                 <Link href="/admin" className="mr-4 flex items-center gap-2">
+                    <Image src="/logotech.png" alt="Tech Lab Logo" width={36} height={36} className="hidden h-9 w-auto md:block" />
+                    <Image src="/logotech.png" alt="Tech Lab Logo" width={30} height={30} className="block h-[30px] w-auto md:hidden" />
+                </Link>
+
                 <Sheet>
                     <SheetTrigger asChild>
                         <Button
@@ -104,14 +99,9 @@ function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }
                 >
                     <PanelLeft className="h-5 w-5" />
                 </Button>
-                <div className="w-full flex-1 flex items-center justify-end gap-4">
-                    <Button variant="ghost" size="sm" className="gap-2">
+                <div className="w-full flex-1 flex items-center justify-end gap-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
                         <Bell className="h-4 w-4" />
-                        <span className="hidden sm:inline">Notificações</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className="gap-2">
-                       <HelpCircle className="h-4 w-4" />
-                       <span className="hidden sm:inline">Ajuda</span>
                     </Button>
                     <AdminUserNav />
                 </div>
@@ -134,8 +124,8 @@ function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }
                 </main>
             </div>
 
-            <footer className="border-t p-4 flex items-center justify-center text-sm text-muted-foreground bg-background shrink-0">
-                TECH LAB © 2024
+            <footer className="h-12 border-t p-4 flex items-center justify-center text-sm text-muted-foreground bg-background shrink-0">
+                TECH LAB © 2026
             </footer>
         </div>
     );
