@@ -5,17 +5,26 @@ export type AppUser = {
   role: string;
   created_at: string;
   updated_at: string;
-  next_step?: string;
+  flow: "diagnostico" | "pagamento" | "painel";
 };
 
 export type Plan = {
-  key: 'START' | 'BUILD' | 'SCALE' | 'RECOVERY';
-  name: string;
-  description: string;
-  setupFee: number;
-  monthlyFee: number;
-  minMonths: number;
-  features: string[];
+  codigo: "START" | "BUILD" | "SCALE" | "RECOVERY";
+  nome: string;
+  setup_valor: number;
+  mensal_valor: number;
+};
+
+export type DiagnosticResult = {
+  plano: Plan;
+  justificativa: string;
+  next_action: string;
+};
+
+export type PaymentCreationResponse = {
+  payment_id: string;
+  status: 'aguardando' | 'confirmado' | 'falhou';
+  checkout_url: string;
 };
 
 export type DashboardOverviewCard = {

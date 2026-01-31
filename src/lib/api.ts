@@ -1,6 +1,6 @@
 "use client";
 // This file is the new API client for communicating with the Go backend.
-import type { AppUser, DashboardData, Plan } from "@/types";
+import type { AppUser, DashboardData, DiagnosticResult, PaymentCreationResponse } from "@/types";
 
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1';
@@ -51,17 +51,17 @@ export async function getMe(): Promise<AppUser> {
     return handleResponse(response);
 }
 
-export async function getRecommendedPlan(projectData: { estagio?: string; dores?: string[]; repositorio?: string; }): Promise<Plan> {
-    const response = await fetch(`${API_BASE_URL}/diagnostico/recommend-plan`, {
-        method: 'POST',
+export async function getDiagnosticResult(): Promise<DiagnosticResult> {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        throw new Error('Authentication token not found.');
+    }
+    const response = await fetch(`${API_BASE_URL}/diagnostico/resultado`, {
+        method: 'GET',
         headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-            estagio: projectData.estagio || "",
-            dores: projectData.dores || [],
-            repositorio: projectData.repositorio || "",
-        }),
     });
     return handleResponse(response);
 }
@@ -82,40 +82,22 @@ export async function getDashboardData(): Promise<DashboardData> {
     return handleResponse(response);
 }
 
-interface BoletoRequest {
-    userCpf: string;
-    diagnosticId: string;
-    amount: number;
-    description: string;
+interface CreatePaymentRequest {
+    tipo: "setup" | "mensal";
+    metodo: "pix" | "boleto" | "credito";
 }
 
-interface BoletoResponse {
-    message: string;
-    asaas_customer_id: string;
-    asaas_payment_id: string;
-    boleto_url: string;
-    invoice_url: string;
-    status: string;
-}
-
-export async function generateBoleto(data: BoletoRequest): Promise<BoletoResponse> {
+export async function createPayment(data: CreatePaymentRequest): Promise<PaymentCreationResponse> {
     const token = localStorage.getItem('authToken');
-    if (!token) {
-        throw new Error('Authentication token not found.');
-    }
+    if (!token) throw new Error('Authentication token not found.');
     
-    const response = await fetch(`${API_BASE_URL}/payments/boleto`, {
+    const response = await fetch(`${API_BASE_URL}/pagamentos/create`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-            user_cpf: data.userCpf,
-            diagnostic_id: data.diagnosticId,
-            amount: data.amount,
-            description: data.description,
-        }),
+        body: JSON.stringify(data),
     });
     return handleResponse(response);
 }

@@ -31,13 +31,30 @@ export default function FlowPage() {
             return;
         }
 
-        // O backend define o próximo passo.
-        if (user.next_step) {
-            router.replace(user.next_step);
+        // O backend define o próximo passo através do campo 'flow'.
+        if (user.flow) {
+            switch (user.flow) {
+                case 'diagnostico':
+                    router.replace('/diagnostico');
+                    break;
+                case 'pagamento':
+                    router.replace('/diagnostico/10-pagamento');
+                    break;
+                case 'painel':
+                    if (user.role === 'admin' || user.role === 'consultor') {
+                        router.replace('/admin');
+                    } else {
+                        router.replace('/dashboard');
+                    }
+                    break;
+                default:
+                    // Fallback para uma rota segura caso o valor de 'flow' seja inesperado.
+                    router.replace('/login');
+            }
             return;
         }
 
-        // Fallback: se o backend não fornecer um 'next_step', usamos o 'role'.
+        // Fallback caso o campo 'flow' não seja fornecido.
         if (user.role === 'admin' || user.role === 'consultor') {
             router.replace("/admin");
         } else {

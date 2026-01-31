@@ -28,11 +28,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { Plan } from "@/types";
+import type { DiagnosticResult, Plan } from "@/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { getRecommendedPlan, generateBoleto } from "@/lib/api";
+import { getDiagnosticResult, createPayment } from "@/lib/api";
 
 
 // Simple interest calculation for demonstration
@@ -76,8 +76,8 @@ function ExtratoDialogContent({ plan }: { plan: Plan }) {
     };
 
     const invoiceItems = [
-        { service: "Taxa de Setup", details: `Setup e configuração do plano ${plan.key}`, price: plan.setupFee },
-        ...(plan.monthlyFee > 0 ? [{ service: `Primeira Mensalidade`, details: `Referente ao plano ${plan.key}`, price: plan.monthlyFee }] : [])
+        { service: "Taxa de Setup", details: `Setup e configuração do plano ${plan.codigo}`, price: plan.setup_valor },
+        ...(plan.mensal_valor > 0 ? [{ service: `Primeira Mensalidade`, details: `Referente ao plano ${plan.codigo}`, price: plan.mensal_valor }] : [])
     ];
     const total = invoiceItems.reduce((acc, item) => acc + item.price, 0);
 
@@ -231,10 +231,10 @@ export default function ResultadoPagamentoPage() {
   const { toast } = useToast();
   const { data: diagnosticData, resetData } = useDiagnostic();
   const { user, signUp } = useAuth();
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'boleto' | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'credito' | 'boleto' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
-  const [recommendedPlan, setRecommendedPlan] = useState<Plan | null>(null);
+  const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticResult | null>(null);
   const [loadingPlan, setLoadingPlan] = useState(true);
   const [errorPlan, setErrorPlan] = useState<string | null>(null);
 
@@ -242,31 +242,27 @@ export default function ResultadoPagamentoPage() {
 
   useEffect(() => {
     const fetchPlan = async () => {
-        if (diagnosticData.projeto.estagio) {
-            try {
-                setLoadingPlan(true);
-                setErrorPlan(null);
-                const plan = await getRecommendedPlan(diagnosticData.projeto);
-                setRecommendedPlan(plan);
-            } catch (error) {
-                 setErrorPlan(error instanceof Error ? error.message : "Não foi possível recomendar um plano. Tente voltar e avançar novamente.");
-            } finally {
-                setLoadingPlan(false);
-            }
-        } else {
-            setErrorPlan("Dados do diagnóstico incompletos. Por favor, retorne às etapas anteriores.");
-            setLoadingPlan(false);
-        }
+      try {
+          setLoadingPlan(true);
+          setErrorPlan(null);
+          const result = await getDiagnosticResult();
+          setDiagnosticResult(result);
+      } catch (error) {
+            setErrorPlan(error instanceof Error ? error.message : "Não foi possível buscar seu plano recomendado.");
+      } finally {
+          setLoadingPlan(false);
+      }
     };
     fetchPlan();
-  }, [diagnosticData.projeto]);
+  }, []);
 
-  const totalValue = recommendedPlan ? recommendedPlan.setupFee + (recommendedPlan.monthlyFee > 0 ? recommendedPlan.monthlyFee : 0) : 0;
+  const plan = diagnosticResult?.plano;
+  const totalValue = plan ? plan.setup_valor + (plan.mensal_valor > 0 ? plan.mensal_valor : 0) : 0;
   const installmentOptions = useMemo(() => calculateInstallments(totalValue), [totalValue]);
   const currentInstallment = installmentOptions.find(i => i.num === parseInt(selectedInstallment, 10));
 
-  const handlePayment = async (method: 'card' | 'boleto') => {
-    if (!recommendedPlan) {
+  const handlePayment = async (method: 'credito' | 'boleto') => {
+    if (!plan) {
         toast({
             variant: "destructive",
             title: "Plano não carregado",
@@ -296,47 +292,28 @@ export default function ResultadoPagamentoPage() {
             throw new Error("Falha ao obter informações do usuário após o login/cadastro.");
         }
         
-        if (method === 'boleto') {
-            const result = await generateBoleto({
-                userCpf: diagnosticData.pessoa.cpf || "",
-                diagnosticId: crypto.randomUUID(),
-                amount: totalValue,
-                description: `Pagamento para o plano ${recommendedPlan.name}`,
-            });
+        toast({
+          title: "Iniciando pagamento...",
+          description: "Você será redirecionado para um ambiente seguro para finalizar a transação.",
+        });
+        
+        const result = await createPayment({
+          tipo: 'setup',
+          metodo: method,
+        });
 
-            toast({
-                title: "Boleto Gerado!",
-                description: "Seu boleto está sendo aberto em uma nova aba.",
-            });
-            
-            window.open(result.boleto_url, '_blank', 'noopener,noreferrer');
-            
-            toast({
-                title: "Processo Finalizado",
-                description: "Você será redirecionado para o seu painel.",
-            });
+        // Redirect user to the payment provider's checkout URL
+        window.location.href = result.checkout_url;
 
-            resetData();
-            router.push('/dashboard');
-
-        } else { // 'card'
-            console.log("Simulating card payment...");
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            toast({
-                title: "Processo finalizado com sucesso!",
-                description: "Seu painel personalizado está sendo preparado.",
-            });
-
-            resetData();
-            router.push('/dashboard');
-        }
+        // The user will be redirected away from the site.
+        // We don't need to reset data or push routes here anymore.
+        // The /flow page will handle the user's state when they return.
         
     } catch (error) {
         toast({
             variant: "destructive",
             title: "Erro no Processamento",
-            description: error instanceof Error ? error.message : "Não foi possível finalizar. Verifique os dados e tente novamente.",
+            description: error instanceof Error ? error.message : "Não foi possível iniciar o pagamento. Verifique os dados e tente novamente.",
         });
         setIsLoading(false);
         setPaymentMethod(null);
@@ -353,7 +330,7 @@ export default function ResultadoPagamentoPage() {
         )
     }
 
-    if (errorPlan || !recommendedPlan) {
+    if (errorPlan || !plan) {
          return (
             <div className="flex flex-col items-center justify-center text-center min-h-[350px]">
                 <ServerCrash className="h-12 w-12 text-destructive mb-4" />
@@ -368,9 +345,9 @@ export default function ResultadoPagamentoPage() {
         <div className="space-y-6">
             <Alert variant="default" className="border-primary">
                 <Check className="h-4 w-4" />
-                <AlertTitle className="font-bold">{recommendedPlan.name}</AlertTitle>
+                <AlertTitle className="font-bold">{plan.nome}</AlertTitle>
                 <AlertDescription>
-                    {recommendedPlan.description}
+                    {diagnosticResult?.justificativa}
                 </AlertDescription>
             </Alert>
             
@@ -402,8 +379,8 @@ export default function ResultadoPagamentoPage() {
             </div>
 
             <div className="space-y-4">
-                <Button onClick={() => handlePayment('card')} disabled={isLoading} className="w-full h-12">
-                    {isLoading && paymentMethod === 'card' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
+                <Button onClick={() => handlePayment('credito')} disabled={isLoading} className="w-full h-12">
+                    {isLoading && paymentMethod === 'credito' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
                     Pagar com Cartão de Crédito
                 </Button>
                 <Button onClick={() => handlePayment('boleto')} disabled={isLoading} variant="secondary" className="w-full h-12">
@@ -423,7 +400,7 @@ export default function ResultadoPagamentoPage() {
                       Ver extrato detalhado da cobrança
                   </button>
                 </DialogTrigger>
-                <ExtratoDialogContent plan={recommendedPlan} />
+                <ExtratoDialogContent plan={plan} />
               </Dialog>
             </div>
         </div>
