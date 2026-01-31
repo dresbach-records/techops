@@ -115,50 +115,52 @@ func NewServer(db *sql.DB) *gin.Engine {
 	router.POST("/webhooks/whatsapp", rateLimiter, whatsapp.ReceiveWebhook)
 
 	// Initialize services
-	emailSvc, err := email.NewResendService()
-	if err != nil {
-		log.Printf("WARNING: Could not initialize email service: %v. Emails will be simulated.", err)
-	}
-
 	userRepo := users.NewRepository(db)
 	authSvc, err := auth.NewService(userRepo)
 	if err != nil {
 		log.Fatalf("FATAL: Could not initialize auth service: %v", err)
 	}
+	painelSvc := painel.NewService()
+	diagSvc := diagnostico.NewService()
+	pagamentoSvc := pagamento.NewService()
+
+	// Initialize handlers
 	authHandler := auth.NewHandler(authSvc)
-	painelHandler := painel.NewHandler()
 	usersHandler := users.NewHandler(userRepo)
+	painelHandler := painel.NewHandler(painelSvc)
+	diagHandler := diagnostico.NewHandler(diagSvc)
+	pagamentoHandler := pagamento.NewHandler(pagamentoSvc)
 
 	// API versioning group
 	v1 := router.Group("/v1")
 	{
-		// Public routes
+		// Public auth routes
 		authRoutes := v1.Group("/auth")
 		{
-			authRoutes.POST("/register", authHandler.Register)
-			// Apply rate limiting to login to prevent brute-force attacks.
+			authRoutes.POST("/register", rateLimiter, authHandler.Register)
 			authRoutes.POST("/login", rateLimiter, authHandler.Login)
 		}
 
-		diagRoutes := v1.Group("/diagnostico")
-		{
-			diagRoutes.POST("/recommend-plan", diagnostico.RecommendPlanHandler)
-		}
-
-		if emailSvc != nil {
-			v1.POST("/send-email", email.SendEmailHandler(emailSvc))
-		}
-
-		// Apply rate limiting to webhooks to prevent abuse.
+		// Public webhook routes
 		v1.POST("/webhooks/asaas/payment", rateLimiter, pagamento.AsaasWebhookHandler())
 
 		// Authenticated routes
 		api := v1.Group("/")
 		api.Use(auth.AuthRequired())
 		{
+			// User
 			api.GET("/users/me", usersHandler.GetMe)
-			api.GET("/dashboard", painelHandler.GetDashboard)
-			api.POST("/payments/boleto", pagamento.GenerateBoletoHandler())
+
+			// Painel
+			api.GET("/cliente/painel", painelHandler.GetPainel)
+
+			// Diagnostico
+			api.GET("/diagnostico/resultado", diagHandler.GetResultadoHandler)
+			// TODO: Add POST /diagnostico/start and PATCH /diagnostico/step
+
+			// Pagamento
+			api.POST("/pagamentos/create", pagamentoHandler.CreatePaymentHandler)
+			// TODO: Add GET /pagamentos/status
 		}
 	}
 
@@ -185,20 +187,20 @@ func LoggerMiddleware() gin.HandlerFunc {
 		status := c.Writer.Status()
 
 		logMap := gin.H{
-			"level":       "info",
-			"timestamp":   start.UTC().Format(time.RFC3339),
-			"request_id":  c.GetString("request_id"),
-			"endpoint":    c.Request.URL.Path,
-			"method":      c.Request.Method,
-			"status":      status,
-			"latency_ms":  latency.Milliseconds(),
-			"client_ip":   c.ClientIP(),
+			"level":      "info",
+			"timestamp":  start.UTC().Format(time.RFC3339),
+			"request_id": c.GetString("request_id"),
+			"endpoint":   c.Request.URL.Path,
+			"method":     c.Request.Method,
+			"status":     status,
+			"latency_ms": latency.Milliseconds(),
+			"client_ip":  c.ClientIP(),
 		}
 
 		if userID, exists := c.Get("userID"); exists {
 			logMap["user_id"] = userID
 		}
-		
+
 		if len(c.Errors) > 0 {
 			logMap["level"] = "error"
 			logMap["error"] = c.Errors.ByType(gin.ErrorTypePrivate).String()
@@ -209,7 +211,7 @@ func LoggerMiddleware() gin.HandlerFunc {
 		} else if status >= 400 {
 			logMap["level"] = "warning"
 		}
-		
+
 		logJSON, err := json.Marshal(logMap)
 		if err != nil {
 			// Fallback if JSON marshaling fails

@@ -3,7 +3,6 @@ package users
 import (
 	"database/sql"
 	"fmt"
-	"time"
 )
 
 // Repository provides access to the user storage.
@@ -25,11 +24,19 @@ func NewRepository(db *sql.DB) Repository {
 // Save creates a new user in the database.
 func (r *repository) Save(user User) (*User, error) {
 	query := `
-		INSERT INTO users (name, email, password_hash, role) 
-		VALUES ($1, $2, $3, $4) 
+		INSERT INTO users (nome, email, password_hash, role, status, flow_step)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at, updated_at
 	`
-	err := r.db.QueryRow(query, user.Name, user.Email, user.PasswordHash, user.Role).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
+	err := r.db.QueryRow(
+		query,
+		user.Nome,
+		user.Email,
+		user.PasswordHash,
+		user.Role,
+		user.Status,
+		user.Flow,
+	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("could not save user: %w", err)
 	}
@@ -39,17 +46,19 @@ func (r *repository) Save(user User) (*User, error) {
 // FindByEmail finds a user by their email address.
 func (r *repository) FindByEmail(email string) (*User, error) {
 	query := `
-		SELECT id, name, email, password_hash, role, created_at, updated_at
+		SELECT id, nome, email, password_hash, role, status, flow_step, created_at, updated_at
 		FROM users
 		WHERE email = $1
 	`
 	var user User
 	err := r.db.QueryRow(query, email).Scan(
 		&user.ID,
-		&user.Name,
+		&user.Nome,
 		&user.Email,
 		&user.PasswordHash,
 		&user.Role,
+		&user.Status,
+		&user.Flow,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -65,17 +74,19 @@ func (r *repository) FindByEmail(email string) (*User, error) {
 // FindByID finds a user by their ID.
 func (r *repository) FindByID(id string) (*User, error) {
 	query := `
-		SELECT id, name, email, password_hash, role, created_at, updated_at
+		SELECT id, nome, email, password_hash, role, status, flow_step, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
 	var user User
 	err := r.db.QueryRow(query, id).Scan(
 		&user.ID,
-		&user.Name,
+		&user.Nome,
 		&user.Email,
 		&user.PasswordHash,
 		&user.Role,
+		&user.Status,
+		&user.Flow,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)

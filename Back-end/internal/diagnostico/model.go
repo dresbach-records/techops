@@ -1,19 +1,16 @@
 package diagnostico
 
-// Plan defines the structure for a subscription plan.
-type Plan struct {
-	Key         string   `json:"key"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	SetupFee    float64  `json:"setupFee"`
-	MonthlyFee  float64  `json:"monthlyFee"`
-	MinMonths   int      `json:"minMonths"`
-	Features    []string `json:"features"`
+// Plano is the contract for a plan.
+type Plano struct {
+	Codigo      string  `json:"codigo"`
+	Nome        string  `json:"nome"`
+	SetupValor  float64 `json:"setup_valor"`
+	MensalValor float64 `json:"mensal_valor,omitempty"`
 }
 
-// RecommendPlanRequest defines the input for the plan recommendation endpoint.
-type RecommendPlanRequest struct {
-	Estagio     string   `json:"estagio"`
-	Dores       []string `json:"dores"`
-	Repositorio string   `json:"repositorio"`
+// DiagnosticoResultadoResponse is the contract for GET /diagnostico/resultado
+type DiagnosticoResultadoResponse struct {
+	Plano         Plano  `json:"plano"`
+	Justificativa string `json:"justificativa"`
+	NextAction    string `json:"next_action"`
 }

@@ -8,34 +8,28 @@ import (
 
 // Handler holds the services required by the painel handlers.
 type Handler struct {
-	// No services needed for now, as data is hardcoded
+	service Service
 }
 
 // NewHandler creates a new painel handler.
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(s Service) *Handler {
+	return &Handler{service: s}
 }
 
-// GetDashboard returns the dashboard data for the authenticated user.
-func (h *Handler) GetDashboard(c *gin.Context) {
+// GetPainel returns the dashboard data for the authenticated user.
+func (h *Handler) GetPainel(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "User ID not found in context"})
 		return
 	}
 
-	userName, _ := c.Get("userName")
-	if userName == nil {
-		userName = "Usuário" // Fallback
-	}
-
-	dashboardData, err := BuildForUser(userID.(string), userName.(string))
+	painelData, err := h.service.BuildForUser(userID.(string))
 	if err != nil {
-		// Handle access denied error from the builder.
-		// This enforces the "gate" for dashboard access.
+		// This will catch "access blocked" errors from the service.
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, dashboardData)
+	c.JSON(http.StatusOK, painelData)
 }

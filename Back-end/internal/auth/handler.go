@@ -8,7 +8,7 @@ import (
 
 // RegisterRequest defines the expected JSON for user registration.
 type RegisterRequest struct {
-	Name     string `json:"name" binding:"required,min=2"`
+	Nome     string `json:"nome" binding:"required,min=2"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=8"`
 }
@@ -37,15 +37,14 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	token, err := h.service.Register(req.Name, req.Email, req.Password)
+	// The service now returns the LoginResponse contract
+	loginResp, err := h.service.Register(req.Nome, req.Email, req.Password)
 	if err != nil {
-		// In a real app, you'd check the error type to return more specific messages
-		// (e.g., email already exists).
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"access_token": token})
+	c.JSON(http.StatusCreated, loginResp)
 }
 
 // Login handles user authentication.
@@ -56,11 +55,11 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := h.service.Login(req.Email, req.Password)
+	loginResp, err := h.service.Login(req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_credentials"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"access_token": token})
+	c.JSON(http.StatusOK, loginResp)
 }

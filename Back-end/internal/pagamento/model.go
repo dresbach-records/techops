@@ -1,25 +1,25 @@
 package pagamento
 
-// This file defines the models for payment processing with Asaas.
-
-// AsaasCustomer represents a customer in Asaas.
-type AsaasCustomer struct {
-	ID                string `json:"id"`
-	Name              string `json:"name"`
-	Email             string `json:"email"`
-	CpfCnpj           string `json:"cpfCnpj,omitempty"`
-	ExternalReference string `json:"externalReference,omitempty"`
+// CriarPagamentoRequest is the contract for POST /pagamentos/create
+type CriarPagamentoRequest struct {
+	Tipo   string `json:"tipo" binding:"required,oneof=setup mensal"`
+	Metodo string `json:"metodo" binding:"required,oneof=pix boleto credito"`
 }
 
-// AsaasPayment represents a payment object from Asaas.
-type AsaasPayment struct {
-	ID          string  `json:"id"`
-	Customer    string  `json:"customer"`
-	BillingType string  `json:"billingType"`
-	Value       float64 `json:"value"`
-	DueDate     string  `json:"dueDate"`
-	Description string  `json:"description"`
-	BankSlipUrl string  `json:"bankSlipUrl"`
-	Status      string  `json:"status"`
-	InvoiceUrl  string  `json:"invoiceUrl"`
+// CriarPagamentoResponse is the contract for the response of POST /pagamentos/create
+type CriarPagamentoResponse struct {
+	PaymentID   string `json:"payment_id"`
+	Status      string `json:"status"`
+	CheckoutURL string `json:"checkout_url"`
+}
+
+// AsaasWebhookPayload defines the expected structure for Asaas webhooks.
+// This can be expanded based on the events you need to handle.
+type AsaasWebhookPayload struct {
+	Event   string `json:"event"`
+	Payment struct {
+		ID                string `json:"id"`
+		Status            string `json:"status"`
+		ExternalReference string `json:"externalReference"`
+	} `json:"payment"`
 }

@@ -16,7 +16,7 @@ func NewHandler(r Repository) *Handler {
 	return &Handler{repo: r}
 }
 
-// GetMe returns the details of the currently authenticated user.
+// GetMe returns the details of the currently authenticated user based on the UserMeResponse contract.
 func (h *Handler) GetMe(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -36,5 +36,15 @@ func (h *Handler) GetMe(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	// Map the internal User model to the public UserMeResponse contract
+	response := UserMeResponse{
+		ID:     user.ID,
+		Nome:   user.Nome,
+		Email:  user.Email,
+		Role:   user.Role,
+		Status: user.Status,
+		Flow:   user.Flow,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
