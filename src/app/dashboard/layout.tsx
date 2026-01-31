@@ -13,14 +13,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { DashboardProvider, useDashboard } from "@/contexts/DashboardContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -149,55 +141,10 @@ function ClientSidebarNav() {
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     const { user } = useAuth();
-    const [hasNotification, setHasNotification] = useState(false);
-    const [playSound, setPlaySound] = useState(false);
-
-    useEffect(() => {
-        if (user?.payment_pending_boleto) {
-            setHasNotification(true);
-            setPlaySound(true); 
-        }
-    }, [user]);
-
-    useEffect(() => {
-        if (playSound) {
-            const audio = new Audio('/notification.mp3'); // Assumes file is in /public/notification.mp3
-            audio.play().catch(e => console.error("Error playing sound:", e));
-            setPlaySound(false); // Play only once
-        }
-    }, [playSound]);
 
     const headerRightContent = (
         <div className="flex items-center gap-2">
              <span className="text-sm font-medium hidden sm:block">Bem-vindo, {user?.name}</span>
-             <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 relative">
-                        <Bell className="h-4 w-4" />
-                        {hasNotification && (
-                            <span className="absolute top-1 right-1 flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                            </span>
-                        )}
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
-                    <DropdownMenuLabel>Notificações</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {user?.payment_pending_boleto ? (
-                        <DropdownMenuItem className="flex-col items-start gap-1 cursor-pointer">
-                            <p className="font-semibold">Pagamento Pendente</p>
-                            <p className="text-xs text-muted-foreground">Você tem um boleto para pagar.</p>
-                            <Button size="sm" className="mt-2 w-full" asChild><Link href="/pagamento">Pagar agora</Link></Button>
-                        </DropdownMenuItem>
-                    ) : (
-                         <DropdownMenuItem>
-                            <p className="text-sm text-muted-foreground p-4 text-center w-full">Nenhuma notificação nova.</p>
-                        </DropdownMenuItem>
-                    )}
-                </DropdownMenuContent>
-            </DropdownMenu>
             <UserNav />
         </div>
     );

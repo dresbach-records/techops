@@ -5,11 +5,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type AccessLevel = "authenticated" | "paid";
-
 interface AuthGuardProps {
   children: ReactNode;
-  access: AccessLevel;
 }
 
 function LoadingScreen() {
@@ -26,8 +23,8 @@ function LoadingScreen() {
     );
 }
 
-export function AuthGuard({ children, access }: AuthGuardProps) {
-  const { isAuthenticated, isPaid, loading } = useAuth();
+export function AuthGuard({ children }: AuthGuardProps) {
+  const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -41,13 +38,9 @@ export function AuthGuard({ children, access }: AuthGuardProps) {
       return;
     }
 
-    if (access === "paid" && !isPaid) {
-      router.replace("/pagamento");
-      return;
-    }
-  }, [isAuthenticated, isPaid, loading, router, access, pathname]);
+  }, [isAuthenticated, loading, router, pathname]);
 
-  if (loading || !isAuthenticated || (access === "paid" && !isPaid)) {
+  if (loading || !isAuthenticated) {
     return <LoadingScreen />;
   }
 
