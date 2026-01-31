@@ -20,6 +20,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signUp: (diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto') => Promise<void>;
   logout: () => void;
+  setPaymentSuccess: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -88,11 +89,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
     if (!data.user) throw new Error("Cadastro falhou, usuário não retornado.");
 
+    // Flatten the diagnostic data for insertion
+    const { pessoa, contato, projeto, pagamento } = diagnosticData;
+    const diagnosticRecord = {
+        user_id: data.user.id,
+        nome: pessoa.nome,
+        cpf: pessoa.cpf,
+        data_nascimento: pessoa.data_nascimento,
+        cnpj: pessoa.cnpj,
+        email: contato.email,
+        whatsapp: contato.whatsapp,
+        estagio: projeto.estagio,
+        dores: projeto.dores,
+        repositorio: projeto.repositorio,
+        expectativa: projeto.expectativa,
+        descricao_problema: projeto.descricao_problema,
+        metodo_pagamento: paymentMethod,
+        status_pagamento: paymentMethod === 'card' ? 'pago' : 'pendente',
+    };
+
     // Salva os dados do diagnóstico na tabela 'diagnosticos'
-    const { error: insertError } = await supabase.from("diagnosticos").insert({
-      user_id: data.user.id,
-      ...diagnosticData,
-    });
+    const { error: insertError } = await supabase.from("diagnosticos").insert([diagnosticRecord]);
 
     if (insertError) {
       // Em um app real, seria importante ter uma estratégia de rollback aqui.
@@ -110,6 +127,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/");
   };
   
+  const setPaymentSuccess = async () => {
+    if (user) {
+        const { data, error } = await supabase.auth.updateUser({
+            data: { isPaid: true, payment_pending_boleto: false }
+        })
+        if (data.user) {
+             const appUser: AppUser = {
+                id: data.user.id,
+                email: data.user.email!,
+                name: data.user.user_metadata?.name || "Usuário",
+                isPaid: data.user.user_metadata?.isPaid || false,
+                payment_pending_boleto: data.user.user_metadata?.payment_pending_boleto || false,
+            };
+            setUser(appUser);
+        }
+        if (error) {
+            console.error("Error updating user payment status", error);
+        }
+    }
+  }
+  
   const isAuthenticated = !!user;
   const isPaid = user?.isPaid || false;
 
@@ -123,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         signUp,
         logout,
+        setPaymentSuccess
       }}
     >
       {children}
