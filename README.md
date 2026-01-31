@@ -38,21 +38,19 @@ Fluxo principal:
 Site → Cadastro → Questionário → Pagamento → IA configura painel → Consultoria ativa
 
 🧱 Arquitetura Geral
-Frontend (Next.js)
+Frontend (Next.js / Genkit)
         ↓
 Backend Core (Go)
         ↓
-IA Service (Python)
-        ↓
-Sistema de Conhecimento / Diagnóstico
+Supabase (Postgres)
 
 Separação de responsabilidades
 
-Frontend: experiência, onboarding, dashboard
+Frontend: experiência do usuário, onboarding, dashboard e lógica de IA (com Genkit).
 
-Backend: regras de negócio, segurança, pagamento, permissões
+Backend: regras de negócio core, segurança, pagamento, permissões.
 
-IA: análise de questionário, geração de painel, apoio à consultoria
+(A arquitetura foi consolidada para centralizar a lógica de IA no stack Next.js/Genkit, que atua como um Backend-for-Frontend, eliminando a necessidade de um serviço de IA Python separado.)
 
 Tech Lab: operação, confiabilidade, custo e escala
 
@@ -115,8 +113,6 @@ Controle de acesso a módulos
 
 Logs e auditoria
 
-Integração com serviço de IA
-
 Regras centrais
 
 Usuário sem pagamento → acesso limitado
@@ -125,9 +121,9 @@ Usuário com pagamento → painel liberado conforme diagnóstico
 
 Nenhuma função crítica é liberada sem validação
 
-🤖 IA / Lógica Inteligente (Python)
+🤖 IA / Lógica Inteligente (Centralizada no Next.js com Genkit)
 
-A IA não substitui a consultoria, ela apoia decisões técnicas.
+A IA não substitui a consultoria, ela apoia decisões técnicas. A lógica de IA agora reside no stack do Next.js (em `/src/ai`), utilizando Genkit.
 
 Funções da IA
 

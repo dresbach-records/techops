@@ -141,28 +141,23 @@ Endpoints
 
  GET /pagamentos/status
 
-6) Integração com IA (Python)
+6) Integração com IA (Centralizada no Frontend/Next.js)
 
-Objetivo: IA apoia decisões, não manda.
+Objetivo: IA apoia decisões, não manda. A lógica de IA foi centralizada.
 
- Client HTTP seguro para IA
+ Status: A responsabilidade da IA foi movida para o stack do Next.js (usando Genkit),
+ que atua como um "Backend for Frontend" (BFF).
 
- Timeout e retry
+ O backend Go NÃO se comunica mais com um serviço de IA separado.
 
- Logs de decisão
+Fluxo ATUAL:
 
-Fluxo
+Diagnóstico pago (Frontend)
+ → Frontend (Server Action) chama Genkit Flow
+ → Genkit retorna JSON estruturado
+ → Frontend renderiza o painel
 
-Diagnóstico pago
- → Backend chama IA
- → IA retorna JSON estruturado
- → Backend valida
- → Painel é criado
-
-
-Endpoints internos
-
- POST /internal/ia/analisar-diagnostico
+ O endpoint /internal/ia/analisar-diagnostico foi descontinuado.
 
 7) Painel do Cliente (dinâmico)
 
