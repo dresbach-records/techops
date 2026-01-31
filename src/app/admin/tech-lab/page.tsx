@@ -1,20 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, AlertTriangle, Clock, RefreshCw } from "lucide-react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const TechLabLatencyChart = dynamic(
+  () => import("@/components/charts/TechLabLatencyChart").then((mod) => mod.TechLabLatencyChart),
+  { ssr: false, loading: () => <Skeleton className="h-[250px] w-full" /> }
+);
 
 
 const statusCards = [
@@ -42,16 +39,6 @@ const statusCards = [
         description: "Latência elevada no webhook de pagamentos.",
         icon: <AlertTriangle className="h-6 w-6 text-yellow-500" />
     },
-];
-
-const latencyData = [
-  { name: '12:00', ms: 55 },
-  { name: '12:05', ms: 62 },
-  { name: '12:10', ms: 78 },
-  { name: '12:15', ms: 85 },
-  { name: '12:20', ms: 92 },
-  { name: '12:25', ms: 110 },
-  { name: '12:30', ms: 80 },
 ];
 
 const errorLogs = [
@@ -127,16 +114,7 @@ export default function TechLabPage() {
                 <CardDescription>Tempo médio de resposta dos últimos 30 minutos.</CardDescription>
             </CardHeader>
             <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={latencyData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false}/>
-                        <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                        <Tooltip contentStyle={{ fontSize: '12px', borderRadius: '0.5rem' }} />
-                        <Legend wrapperStyle={{fontSize: "12px"}}/>
-                        <Line type="monotone" dataKey="ms" stroke="#16a34a" strokeWidth={2} dot={{r: 4}} activeDot={{r: 6}} />
-                    </LineChart>
-                </ResponsiveContainer>
+                <TechLabLatencyChart />
             </CardContent>
         </Card>
         

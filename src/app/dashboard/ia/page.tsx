@@ -1,29 +1,16 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { BrainCircuit, Bot, FileText } from "lucide-react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const aiUsageData = [
-  { date: '01/08', calls: 5 },
-  { date: '02/08', calls: 8 },
-  { date: '03/08', calls: 3 },
-  { date: '04/08', calls: 12 },
-  { date: '05/08', calls: 7 },
-  { date: '06/08', calls: 10 },
-  { date: '07/08', calls: 6 },
-];
+const IaUsageChart = dynamic(
+    () => import('@/components/charts/IaUsageChart').then(mod => mod.IaUsageChart),
+    { ssr: false, loading: () => <Skeleton className="h-[250px] w-full" /> }
+);
 
 const aiLogs = [
     { id: "LOG001", context: "Análise de Diagnóstico", model: "gemini-pro", tokens: 1250, timestamp: "2026-08-01 10:15" },
@@ -76,18 +63,7 @@ export default function IaPage() {
             </div>
              <div>
                 <h3 className="text-xl font-semibold mb-4">Uso de IA (Últimos 7 dias)</h3>
-                <div className="h-[250px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={aiUsageData}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false}/>
-                            <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                            <Tooltip contentStyle={{ fontSize: '12px', borderRadius: '0.5rem' }} />
-                            <Legend wrapperStyle={{fontSize: "12px"}}/>
-                            <Line type="monotone" dataKey="calls" name="Chamadas à API" stroke="hsl(var(--primary))" strokeWidth={2} dot={{r: 4}} activeDot={{r: 6}} />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
+                <IaUsageChart />
             </div>
              <div>
                 <h3 className="text-xl font-semibold mb-4">Logs de Atividade da IA</h3>

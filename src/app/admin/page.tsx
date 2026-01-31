@@ -1,12 +1,24 @@
 "use client"
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Briefcase, CreditCard, Server, AlertTriangle, Info, ChevronRight, AlertCircle, CheckCircle } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, LineChart, Line, CartesianGrid } from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const AdminConsultoriaChart = dynamic(
+  () => import('@/components/charts/AdminConsultoriaChart').then(mod => mod.AdminConsultoriaChart),
+  { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> }
+);
+
+const AdminFinanceiroChart = dynamic(
+  () => import('@/components/charts/AdminFinanceiroChart').then(mod => mod.AdminFinanceiroChart),
+  { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> }
+);
+
 
 const overviewCards = [
     {
@@ -49,26 +61,6 @@ const statusColors: { [key: string]: string } = {
     "Aprovado": "bg-green-100 text-green-800",
     "Pendente": "bg-blue-100 text-blue-800",
 };
-
-const consultoriaData = [
-  { name: 'Seg', 'Em Análise': 23, 'Concluídos': 0 },
-  { name: 'Ter', 'Em Análise': 15, 'Concluídos': 8 },
-  { name: 'Qua', 'Em Análise': 28, 'Concluídos': 12 },
-  { name: 'Qui', 'Em Análise': 32, 'Concluídos': 5 },
-  { name: 'Sex', 'Em Análise': 22, 'Concluídos': 0 },
-  { name: 'Sáb', 'Em Análise': 15, 'Concluídos': 0 },
-  { name: 'Dom', 'Em Análise': 10, 'Concluídos': 0 },
-];
-
-const financeiroData = [
-    { name: 'Seg', 'Semana Passada': 28, 'Faturas Pendentes': 25 },
-    { name: 'Ter', 'Semana Passada': 32, 'Faturas Pendentes': 22 },
-    { name: 'Qua', 'Semana Passada': 25, 'Faturas Pendentes': 30 },
-    { name: 'Qui', 'Semana Passada': 40, 'Faturas Pendentes': 35 },
-    { name: 'Sex', 'Semana Passada': 42, 'Faturas Pendentes': 45 },
-    { name: 'Sáb', 'Semana Passada': 38, 'Faturas Pendentes': 35 },
-    { name: 'Dom', 'Semana Passada': 35, 'Faturas Pendentes': 38 },
-];
 
 export default function AdminDashboardPage() {
   return (
@@ -161,17 +153,7 @@ export default function AdminDashboardPage() {
                 <CardTitle>Próximas Consultorias</CardTitle>
             </CardHeader>
             <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={consultoriaData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="name" fontSize={12} />
-                        <YAxis fontSize={12} />
-                        <Tooltip cursor={{fill: 'rgba(230,230,230,0.5)'}} />
-                        <Legend wrapperStyle={{fontSize: "12px"}} />
-                        <Bar dataKey="Em Análise" stackId="a" fill="#16a34a" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="Concluídos" stackId="a" fill="#a7f3d0" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                </ResponsiveContainer>
+                <AdminConsultoriaChart />
             </CardContent>
         </Card>
         <Card>
@@ -179,17 +161,7 @@ export default function AdminDashboardPage() {
                 <CardTitle>Resumo Financeiro</CardTitle>
             </CardHeader>
             <CardContent>
-                 <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={financeiroData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="name" fontSize={12} />
-                        <YAxis fontSize={12} />
-                        <Tooltip />
-                        <Legend wrapperStyle={{fontSize: "12px"}} />
-                        <Line type="monotone" dataKey="Semana Passada" stroke="#16a34a" strokeWidth={2} dot={{r: 4}} activeDot={{r: 6}} />
-                        <Line type="monotone" dataKey="Faturas Pendentes" stroke="#8884d8" strokeWidth={2} dot={{r: 4}} activeDot={{r: 6}}/>
-                    </LineChart>
-                </ResponsiveContainer>
+                 <AdminFinanceiroChart />
             </CardContent>
         </Card>
       </div>
