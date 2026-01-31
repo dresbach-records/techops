@@ -11,7 +11,7 @@ export function Footer() {
             © {new Date().getFullYear()} Tech Lab
           </p>
           <div className="flex space-x-4 mt-4 sm:mt-0 text-sm">
-            <Link href="#" className="text-muted-foreground hover:text-primary">
+            <Link href="/privacidade" className="text-muted-foreground hover:text-primary">
               Privacidade
             </Link>
             <span className="text-muted-foreground">|</span>
