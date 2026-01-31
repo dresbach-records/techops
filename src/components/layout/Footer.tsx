@@ -6,11 +6,11 @@ export function Footer() {
   return (
     <footer className="border-t bg-card">
       <div className="container py-6">
-        <div className="flex flex-col sm:flex-row justify-between items-center">
+        <div className="flex flex-col items-center gap-4">
           <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} Tech Lab
+            © 2026 Tech Lab
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mt-4 sm:mt-0 text-sm">
+          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-sm">
             <Link href="/privacidade" className="text-muted-foreground hover:text-primary text-center">
               Política de Privacidade
             </Link>
