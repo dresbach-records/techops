@@ -10,6 +10,7 @@ import { UserNav } from "./UserNav";
 
 const navLinks = [
   { href: "/como-funciona", label: "Como Funciona" },
+  { href: "/planos", label: "Planos" },
   { href: "#", label: "Consultoria" },
   { href: "#", label: "Tech Ops" },
 ];
@@ -19,11 +20,10 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
+      <div className="container flex h-24 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logotech.png" alt="Tech Lab Logo" width={40} height={40} className="h-10 w-10" />
-            <span className="font-bold text-lg">TECH LAB</span>
+            <Image src="/logotech.png" alt="Tech Lab Logo" width={500} height={500} className="h-20 w-20" />
           </Link>
         </div>
         <nav className="hidden items-center space-x-6 text-sm font-medium md:flex flex-1 justify-center">
@@ -69,8 +69,7 @@ export function Navbar() {
             <SheetContent side="left">
               <div className="flex flex-col space-y-4 p-4">
                 <Link href="/" className="flex items-center gap-2 mb-4">
-                     <Image src="/logotech.png" alt="Tech Lab Logo" width={40} height={40} className="h-10 w-10" />
-                     <span className="font-bold text-lg">TECH LAB</span>
+                     <Image src="/logotech.png" alt="Tech Lab Logo" width={500} height={500} className="h-20 w-20" />
                 </Link>
                 {navLinks.map((link) => (
                     <Link
