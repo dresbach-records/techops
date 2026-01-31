@@ -1,317 +1,94 @@
-md
 # Tech Lab
 
 Plataforma SaaS voltada à consultoria técnica personalizada, onde clientes passam por um diagnóstico estruturado, realizam o pagamento e recebem uma área do cliente e painel personalizados, gerados conforme suas necessidades de negócio, tecnologia e maturidade técnica.
 
 O sistema foi projetado com arquitetura de engenharia, foco em escalabilidade, segurança e operação profissional (Tech Lab).
 
-🎯 Objetivo do Projeto
+🎯 **Objetivo do Projeto**
 
 Oferecer consultoria técnica estratégica para:
 
-Protótipos
-
-MVPs
-
-Produtos digitais
-
-Negócios web e SaaS
+*   Protótipos
+*   MVPs
+*   Produtos digitais
+*   Negócios web e SaaS
 
 Transformar respostas de um questionário inteligente em:
 
-Diagnóstico técnico
+*   Diagnóstico técnico
+*   Roadmap
+*   Painel do cliente sob medida
+*   Liberar funcionalidades somente após pagamento
+*   Usar IA como apoio técnico, não como sistema autônomo
 
-Roadmap
+---
 
-Painel do cliente sob medida
+## 🧱 Arquitetura Final (FLAGSHIP - NÃO NEGOCIÁVEL)
 
-Liberar funcionalidades somente após pagamento
+O sistema opera sob uma arquitetura de responsabilidade única, onde o **Backend Go é a fonte da verdade absoluta**.
 
-Usar IA como apoio técnico, não como sistema autônomo
+*   **Frontend (Next.js)**: Camada de apresentação pura. Responsável pela UI/UX, coleta de dados e navegação.
+    *   **NUNCA** contém regras de negócio.
+    *   **NUNCA** se conecta diretamente ao banco de dados (Supabase).
+    *   **NUNCA** chama serviços de IA diretamente.
 
-🧠 Conceito Central
+*   **Backend (Go)**: O coração do sistema e a única fonte da verdade.
+    *   **Controla**: Autenticação (JWT + RBAC), regras de negócio, planos, pagamentos, permissões, painéis, e a integração com o WhatsApp Bot e o serviço de IA.
+    *   **Toda decisão nasce aqui.**
 
-O cliente não compra um sistema pronto.
-Ele passa por um diagnóstico técnico, paga pela consultoria e recebe um ambiente ajustado exatamente às suas necessidades.
+*   **Supabase (Postgres as a Service)**: Atua exclusivamente como um banco de dados relacional.
+    *   **NÃO** é usado para autenticação no frontend.
+    *   **NÃO** possui lógica de negócio (Policies, Functions).
+    *   **NÃO** é acessado por nenhum SDK no cliente.
 
-Fluxo principal:
+*   **IA Service (Python / Genkit)**: Serviço de apoio à decisão, chamado exclusivamente pelo backend Go.
+    *   Retorna **JSON estruturado**, nunca texto livre para decisões.
+    *   Toda interação é auditável e registrada pelo backend.
 
-Site → Cadastro → Questionário → Pagamento → Backend analisa com IA → Painel configurado → Consultoria ativa
+---
 
-🧱 Arquitetura Geral (Oficial)
-Frontend (Next.js)
-        ↓
-Backend Core (Go)
-    ├─→ Supabase (Postgres)
-    └─→ IA Service (Python/Genkit)
+## 📌 Princípios da Arquitetura (Decisões Travadas)
 
-Separação de responsabilidades
+1.  **Backend é a Fonte da Verdade**: Se é uma decisão, pertence ao backend. O frontend apenas renderiza o que a API autoriza.
+2.  **Autenticação Centralizada**: O Backend Go emite e valida todos os tokens. O frontend apenas armazena e envia o token.
+3.  **Supabase é Apenas um Banco de Dados**: O acesso direto do frontend ao Supabase é proibido.
+4.  **IA é um Serviço de Apoio, Não um Cérebro Autônomo**: A IA sugere, o backend valida e decide. Toda interação é controlada e auditada.
+5.  **Painel é um Contrato, Não uma Tela**: O que o usuário vê é um reflexo direto do que o backend permitiu, baseado em seu plano e status de pagamento.
+6.  **Segurança é Pré-requisito, Não Feature**: Webhooks são validados, endpoints são protegidos por rate limit, e todos os segredos residem no backend.
+7.  **Observabilidade por Padrão**: O sistema nasce com logs estruturados, healthchecks reais e métricas, garantindo que não opere como uma caixa-preta.
 
-Frontend: experiência do usuário, onboarding, dashboard. NUNCA chama o banco ou a IA diretamente.
+---
 
-Backend: regras de negócio core, segurança, pagamento, permissões. É a única camada que se comunica com o banco de dados e com o serviço de IA.
+## ⚙️ Fluxo Principal do Produto
 
-IA Service: serviço externo que recebe dados do backend Go, analisa e retorna uma sugestão em formato JSON estruturado.
+O cliente não compra um sistema pronto. Ele passa por um diagnóstico técnico, paga pela consultoria e recebe um ambiente ajustado exatamente às suas necessidades.
 
-Tech Lab: operação, confiabilidade, custo e escala
+**Site → Cadastro → Questionário → Pagamento → Backend analisa com IA → Painel configurado → Consultoria ativa**
 
-🖥️ Frontend (Next.js)
-Stack
+---
 
-Next.js (App Router)
+## 🛠️ Operação e Saúde do Sistema (Tech Ops)
 
-TypeScript
+A saúde do sistema é monitorada através do backend, garantindo operação profissional.
 
-Tailwind CSS
+*   **Healthcheck**: O endpoint `GET /health` verifica o status da API e a conexão com o banco de dados em tempo real.
+*   **Logs Estruturados**: Todas as ações e erros são registrados em formato JSON com um `request_id` único para rastreamento completo.
+*   **Painel de Tech Ops**: O painel de administração (`/admin/tech-lab`) oferece uma visão centralizada sobre a saúde dos serviços, latência, métricas e logs críticos.
+*   **Segurança**: Endpoints críticos são protegidos com `rate-limiting` e todos os webhooks (Pagamentos, WhatsApp) validam assinaturas para garantir a integridade.
 
-Arquitetura SaaS
+---
 
-Integração via API REST (com o Backend Go)
+## 🚀 Preparo para Escala Futura
 
-Funcionalidades
+A arquitetura atual foi projetada para permitir a evolução. As seguintes áreas foram identificadas como pontos estratégicos para otimizações de escala:
 
-Site institucional
+*   **Cache**: Endpoints de leitura intensiva, como o de configuração de painéis, podem ser otimizados com uma camada de cache (ex: Redis).
+*   **Filas (Queues)**: Processos assíncronos, como o envio de e-mails ou notificações pós-pagamento, podem ser delegados a uma fila (ex: RabbitMQ, SQS) para aumentar a resiliência e a responsividade da API.
+*   **IA e Custos**: O serviço de IA, sendo um ponto de custo variável, deve ter seu uso monitorado por cliente. Chamadas podem ser otimizadas e cacheadas quando o input for idêntico.
+*   **Backup e Restore**: O procedimento de backup do banco de dados (Postgres) deve ser automatizado e testado periodicamente.
 
-Cadastro e login
+---
 
-Questionário técnico em etapas
+## 📄 Licença
 
-Fluxo de pagamento
-
-Área do cliente (dashboard)
-
-Liberação dinâmica de módulos
-
-Estrutura base
-/app
- ├─ page.tsx (Home)
- ├─ cadastro
- ├─ login
- ├─ questionario
- ├─ pagamento
- ├─ dashboard
- │   ├─ page.tsx
- │   ├─ diagnostico
- │   ├─ roadmap
- │   ├─ documentos
- │   └─ suporte
-/components
-/services
-/types
-
-⚙️ Backend (Go)
-Responsabilidades
-
-Autenticação (JWT)
-
-Multi-tenant (clientes isolados)
-
-Persistência do questionário
-
-Validação de pagamento
-
-Controle de acesso a módulos
-
-Logs e auditoria
-
-Orquestração de chamadas para o serviço de IA
-
-Regras centrais
-
-Usuário sem pagamento → acesso limitado
-
-Usuário com pagamento → painel liberado conforme diagnóstico
-
-Nenhuma função crítica é liberada sem validação
-
-🤖 IA / Lógica Inteligente (Centralizada via Backend)
-
-A IA não substitui a consultoria, ela apoia decisões técnicas. A lógica de IA reside em um serviço externo, chamado exclusivamente pelo backend Go.
-
-Funções da IA
-
-Analisar respostas do questionário
-
-Classificar tipo de negócio e maturidade
-
-Sugerir módulos do painel
-
-Sugerir diagnóstico inicial
-
-Sugerir roadmap técnico
-
-Apoiar o consultor humano
-
-Princípios
-
-IA não inventa respostas; ela retorna JSON estruturado
-
-IA respeita escopo do projeto
-
-IA escala para humano quando necessário
-
-Todas as decisões são auditáveis (logs no backend)
-
-🧩 Questionário Inteligente
-Objetivo
-
-Converter respostas do cliente em dados estruturados, não texto solto.
-
-Blocos típicos
-
-Tipo de negócio
-
-Estágio do produto
-
-Stack atual
-
-Uso de IA
-
-Prioridades
-
-Orçamento e prazo
-
-Esses dados alimentam:
-
-Diagnóstico
-
-Painel
-
-Roadmap
-
-Escopo da consultoria
-
-💳 Pagamento e Liberação
-Modelo
-
-Questionário → resumo do diagnóstico
-
-Exibição do valor da consultoria
-
-Pagamento confirmado
-
-Liberação automática do painel
-
-Controle
-
-Sem pagamento → acesso bloqueado
-
-Com pagamento → módulos liberados conforme perfil
-
-📊 Área do Cliente (Dashboard)
-
-Cada cliente vê apenas o que precisa.
-
-Módulos possíveis
-
-Visão geral
-
-Diagnóstico técnico
-
-Roadmap
-
-Consultoria
-
-Arquitetura
-
-IA / automação
-
-Tech Lab
-
-Documentos
-
-Suporte
-
-O painel é gerado dinamicamente pelo backend.
-
-🛠️ Tech Lab (Essencial)
-
-Tech Lab garante que o sistema:
-
-Fique no ar
-
-Seja seguro
-
-Escale corretamente
-
-Tenha custo controlado (principalmente IA)
-
-Atuação
-
-Infraestrutura
-
-Deploy
-
-Monitoramento
-
-Logs
-
-Backups
-
-Segurança
-
-Controle de consumo
-
-💼 Modelo de Negócio
-
-O projeto é baseado em consultoria personalizada, não venda de software genérico.
-
-Cobrança típica
-
-Diagnóstico técnico
-
-Setup inicial
-
-Consultoria recorrente
-
-Evolução do projeto
-
-🚀 Roadmap Técnico
-Fase 1 – MVP
-
-Site
-
-Cadastro
-
-Questionário
-
-Pagamento
-
-Dashboard básico
-
-Fase 2 – Profissionalização
-
-IA avançada
-
-Roadmap automático
-
-Logs e métricas
-
-Billing refinado
-
-Fase 3 – Escala
-
-Multi-empresa
-
-White-label
-
-API pública
-
-Integrações externas
-
-📌 Princípios do Projeto
-
-Engenharia acima de improviso
-
-Consultoria acima de ferramenta
-
-IA como apoio, não promessa vazia
-
-Escalabilidade desde o início
-
-Operação profissional obrigatória
-
-📄 Licença
-
-Projeto privado / uso interno / consultoria técnica personalizada.
-Distribuição ou uso comercial externo apenas mediante autorização.# techops
+Projeto privado / uso interno / consultoria técnica personalizada. Distribuição ou uso comercial externo apenas mediante autorização.
