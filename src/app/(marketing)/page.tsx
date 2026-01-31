@@ -2,7 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, DraftingCompass, Network, ArrowRight } from "lucide-react";
+import { FileText, DraftingCompass, Network, ArrowRight, Heart } from "lucide-react";
+import { getDonations } from "@/lib/api";
+import { AnonymizedDonation } from "@/types/pagamento";
 
 const features = [
   {
@@ -41,7 +43,14 @@ const howItWorksSteps = [
 ];
 
 
-export default function HomePage() {
+export default async function HomePage() {
+  let donations: AnonymizedDonation[] = [];
+  try {
+    donations = await getDonations();
+  } catch (error) {
+    console.error("Failed to fetch donations:", error);
+  }
+
   return (
     <>
       {/* Hero Section */}
@@ -135,6 +144,38 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Recent Donations Section */}
+      {donations.length > 0 && (
+        <section className="py-20 md:py-24 bg-background">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold font-headline">Apoiadores Recentes</h2>
+              <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+                Agradecemos à comunidade que apoia a engenharia de software aberta e de qualidade.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {donations.map((donation, index) => (
+                <Card key={index} className="p-4 text-center bg-card">
+                  <Heart className="h-8 w-8 text-destructive mx-auto mb-2" />
+                  <p className="font-bold text-lg">
+                    {donation.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Apoiador Anônimo</p>
+                </Card>
+              ))}
+            </div>
+             <div className="mt-8 text-center">
+                  <Button asChild>
+                      <a href="https://www.asaas.com/c/xln8596be4pwvq8e" target="_blank" rel="noopener noreferrer">
+                          <Heart className="mr-2 h-4 w-4" /> Apoiar o Projeto
+                      </a>
+                  </Button>
+              </div>
+          </div>
+        </section>
+      )}
 
       {/* Final CTA Section */}
       <section className="py-20 md:py-24 bg-background">

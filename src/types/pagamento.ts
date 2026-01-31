@@ -17,3 +17,8 @@ export interface PagamentoStatusResponse {
   status: PagamentoStatus
   plano_liberado: boolean
 }
+
+export interface AnonymizedDonation {
+  valor: number
+  data: string // ISO date string
+}

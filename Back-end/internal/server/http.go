@@ -148,6 +148,9 @@ func NewServer(db *sql.DB) *gin.Engine {
 		// Public webhook routes
 		v1.POST("/webhooks/asaas/payment", rateLimiter, pagamentoHandler.AsaasWebhookHandler)
 
+		// Public donations route
+		v1.GET("/donations", pagamentoHandler.GetDonationsHandler)
+
 		// Authenticated routes
 		api := v1.Group("/")
 		api.Use(auth.AuthRequired())

@@ -81,3 +81,15 @@ func (h *Handler) AsaasWebhookHandler(c *gin.Context) {
 	log.Printf("INFO: Webhook for payment '%s' processed successfully.", payload.Payment.ID)
 	c.Status(http.StatusOK)
 }
+
+// GetDonationsHandler handles the request to get recent donations.
+func (h *Handler) GetDonationsHandler(c *gin.Context) {
+	donations, err := h.service.GetDonations()
+	if err != nil {
+		log.Printf("ERROR: failed to get donations: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get donations"})
+		return
+	}
+
+	c.JSON(http.StatusOK, donations)
+}

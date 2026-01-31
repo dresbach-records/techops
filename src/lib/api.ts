@@ -3,7 +3,7 @@
 import type { LoginResponse } from "@/types/auth";
 import type { UserMeResponse } from "@/types/user";
 import type { DiagnosticoResultadoResponse } from "@/types/plano";
-import type { CriarPagamentoRequest, CriarPagamentoResponse } from "@/types/pagamento";
+import type { CriarPagamentoRequest, CriarPagamentoResponse, AnonymizedDonation } from "@/types/pagamento";
 import type { PainelResponse } from "@/types/painel";
 
 
@@ -86,6 +86,12 @@ export async function getDashboardData(): Promise<PainelResponse> {
     return handleResponse(response);
 }
 
+
+export async function getDonations(): Promise<AnonymizedDonation[]> {
+    // This is a public endpoint, so no token is needed.
+    const response = await fetch(`${API_BASE_URL}/donations`);
+    return handleResponse(response);
+}
 
 export async function createPayment(data: CriarPagamentoRequest): Promise<CriarPagamentoResponse> {
     const token = localStorage.getItem('authToken');

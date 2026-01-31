@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"techlab/backend-go/internal/users"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -12,6 +13,7 @@ import (
 type Service interface {
 	CreatePayment(userID string, req CriarPagamentoRequest, planoCodigo string, valor float64) (*CriarPagamentoResponse, error)
 	ProcessAsaasWebhook(payload AsaasWebhookPayload) error
+	GetDonations() ([]AnonymizedDonation, error)
 }
 
 type service struct {
@@ -99,4 +101,19 @@ func (s *service) ProcessAsaasWebhook(payload AsaasWebhookPayload) error {
 	log.Printf("User %s access granted. Panel creation logic would be triggered here.", pagamento.UserID)
 
 	return nil
+}
+
+// GetDonations returns a list of anonymized donations.
+// MOCK IMPLEMENTATION: This should call the Asaas API.
+func (s *service) GetDonations() ([]AnonymizedDonation, error) {
+	log.Println("INFO: Fetching donations (mocked)")
+	// In a real scenario, you would call the Asaas API here to get a list of charges,
+	// filter for the ones related to the donation link, and anonymize the data.
+	return []AnonymizedDonation{
+		{Valor: 50.00, Data: time.Now().Add(-2 * time.Hour)},
+		{Valor: 25.00, Data: time.Now().Add(-5 * time.Hour)},
+		{Valor: 100.00, Data: time.Now().Add(-25 * time.Hour)},
+		{Valor: 10.00, Data: time.Now().Add(-48 * time.Hour)},
+		{Valor: 75.00, Data: time.Now().Add(-50 * time.Hour)},
+	}, nil
 }

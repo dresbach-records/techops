@@ -41,3 +41,9 @@ type Pagamento struct {
 	CreatedAt   time.Time `db:"created_at"`
 	UpdatedAt   time.Time `db:"updated_at"`
 }
+
+// AnonymizedDonation is the public contract for a donation.
+type AnonymizedDonation struct {
+	Valor float64   `json:"valor"`
+	Data  time.Time `json:"data"`
+}
