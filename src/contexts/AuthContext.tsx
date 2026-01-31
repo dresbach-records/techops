@@ -7,9 +7,10 @@ import {
   useState,
   useEffect,
   type ReactNode,
+  useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import type { DiagnosticData } from "./DiagnosticContext";
 import type { Plan } from "@/types";
 import { getContractText } from "@/lib/contract";
@@ -31,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const supabase = useMemo(createClient, []);
 
   useEffect(() => {
     const {
@@ -60,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [router]);
+  }, [router, supabase.auth]);
 
   const login = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
