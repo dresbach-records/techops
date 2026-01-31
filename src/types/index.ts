@@ -5,6 +5,7 @@ export type AppUser = {
   role: string;
   created_at: string;
   updated_at: string;
+  next_step?: string;
 };
 
 export type Plan = {

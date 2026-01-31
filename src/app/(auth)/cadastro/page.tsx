@@ -57,9 +57,9 @@ export default function SignupPage() {
       await signUp(values.name, values.email, values.password);
       toast({
         title: "Conta criada com sucesso!",
-        description: "Você será redirecionado para iniciar seu diagnóstico.",
+        description: "Você será redirecionado para os próximos passos.",
       });
-      router.push('/diagnostico');
+      router.push('/flow');
     } catch (error) {
       toast({
         variant: "destructive",
