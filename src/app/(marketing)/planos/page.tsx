@@ -15,7 +15,7 @@ const plans = [
       "Acesso ao Dashboard",
       "Suporte via Chat (Horário Comercial)",
     ],
-    cta: "Escolher Essencial",
+    cta: "Começar diagnóstico",
     popular: false,
   },
   {
@@ -30,7 +30,7 @@ const plans = [
       "Revisão de Arquitetura",
       "Suporte Prioritário",
     ],
-    cta: "Escolher Profissional",
+    cta: "Começar diagnóstico",
     popular: true,
   },
   {

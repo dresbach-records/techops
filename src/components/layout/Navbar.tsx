@@ -10,7 +10,8 @@ import { UserNav } from "./UserNav";
 
 const navLinks = [
   { href: "/como-funciona", label: "Como Funciona" },
-  { href: "/planos", label: "Planos" },
+  { href: "#", label: "Consultoria" },
+  { href: "#", label: "Tech Ops" },
 ];
 
 export function Navbar() {
@@ -18,13 +19,14 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
+      <div className="container flex h-16 items-center">
         <div className="mr-4 flex items-center">
-          <Link href="/" className="flex items-center">
-            <Image src="/logotech.png" alt="Tech Lab Logo" width={300} height={300} className="h-12 w-12" />
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/logotech.png" alt="Tech Lab Logo" width={40} height={40} className="h-10 w-10" />
+            <span className="font-bold text-lg">TECH LAB</span>
           </Link>
         </div>
-        <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
+        <nav className="hidden items-center space-x-6 text-sm font-medium md:flex flex-1 justify-center">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -35,21 +37,26 @@ export function Navbar() {
             </Link>
           ))}
         </nav>
-        <div className="flex flex-1 items-center justify-end space-x-4">
-          <nav className="flex items-center space-x-2">
+        <div className="flex items-center justify-end space-x-2">
+          <div className="hidden md:flex items-center space-x-2">
             {loading ? null : isAuthenticated ? (
-              <UserNav />
+                <>
+                    <Button variant="outline" asChild>
+                        <Link href="/dashboard">Dashboard</Link>
+                    </Button>
+                    <UserNav />
+                </>
             ) : (
               <>
                 <Button variant="ghost" asChild>
                   <Link href="/login">Login</Link>
                 </Button>
                 <Button asChild>
-                  <Link href="/cadastro">Cadastre-se</Link>
+                  <Link href="/cadastro">Começar diagnóstico</Link>
                 </Button>
               </>
             )}
-          </nav>
+          </div>
         </div>
         <div className="md:hidden">
           <Sheet>
@@ -61,8 +68,9 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent side="left">
               <div className="flex flex-col space-y-4 p-4">
-                <Link href="/" className="flex items-center mb-4">
-                    <Image src="/logotech.png" alt="Tech Lab Logo" width={300} height={300} className="h-12 w-12" />
+                <Link href="/" className="flex items-center gap-2 mb-4">
+                     <Image src="/logotech.png" alt="Tech Lab Logo" width={40} height={40} className="h-10 w-10" />
+                     <span className="font-bold text-lg">TECH LAB</span>
                 </Link>
                 {navLinks.map((link) => (
                     <Link
@@ -73,6 +81,23 @@ export function Navbar() {
                     {link.label}
                     </Link>
                 ))}
+                 <div className="border-t pt-4">
+                    {loading ? null : isAuthenticated ? (
+                        <div className="flex flex-col space-y-2">
+                            <Button variant="outline" asChild><Link href="/dashboard">Dashboard</Link></Button>
+                            <UserNav />
+                        </div>
+                    ) : (
+                    <div className="flex flex-col space-y-2">
+                        <Button variant="ghost" asChild>
+                            <Link href="/login">Login</Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href="/cadastro">Começar diagnóstico</Link>
+                        </Button>
+                    </div>
+                    )}
+                </div>
               </div>
             </SheetContent>
           </Sheet>

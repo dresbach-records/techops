@@ -2,180 +2,146 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Zap, DraftingCompass, BarChart } from "lucide-react";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FileText, DraftingCompass, Network, ArrowRight } from "lucide-react";
 
 const features = [
   {
-    icon: <BarChart className="h-8 w-8 text-primary" />,
-    title: "Diagnóstico Profundo",
-    description:
-      "Nossa IA analisa seu ecossistema tecnológico para identificar gargalos e oportunidades de otimização.",
+    icon: <FileText className="h-8 w-8 text-primary" />,
+    title: "Consultoria Técnica",
+    description: "Decisões técnicas reais para produtos digitais.",
   },
   {
     icon: <DraftingCompass className="h-8 w-8 text-primary" />,
-    title: "Roadmap Personalizado",
-    description:
-      "Receba um plano de ação estratégico e faseado, alinhado com seus objetivos de negócio e capacidade técnica.",
+    title: "Arquitetura de Software",
+    description: "Planejamento estratégico e escalável.",
   },
   {
-    icon: <Zap className="h-8 w-8 text-primary" />,
-    title: "Consultoria Contínua",
-    description:
-      "Acesso a especialistas para tirar dúvidas, validar arquiteturas e acelerar a implementação do seu roadmap.",
+    icon: <Network className="h-8 w-8 text-primary" />,
+    title: "Tech Ops e Escala",
+    description: "Sistemas seguros, eficientes e confiáveis.",
   },
 ];
 
-const testimonials = [
-    {
-      name: "Juliana Almeida",
-      title: "CTO, InovaTech",
-      image: PlaceHolderImages.find(p => p.id === 'testimonial-1')?.imageUrl || '',
-      imageHint: PlaceHolderImages.find(p => p.id === 'testimonial-1')?.imageHint,
-      quote:
-        "A Tech Lab transformou nossa forma de encarar a evolução tecnológica. O diagnóstico foi preciso e o roadmap nos deu a clareza que precisávamos para escalar.",
-    },
-    {
-      name: "Ricardo Mendes",
-      title: "CEO, Startup Vision",
-      image: PlaceHolderImages.find(p => p.id === 'testimonial-2')?.imageUrl || '',
-      imageHint: PlaceHolderImages.find(p => p.id === 'testimonial-2')?.imageHint,
-      quote:
-        "Como uma startup, cada decisão técnica é crucial. A plataforma nos deu segurança para construir uma base sólida e escalável sem desperdiçar recursos.",
-    },
-     {
-      name: "Fernanda Costa",
-      title: "Head de Engenharia, SolutionCo",
-      image: PlaceHolderImages.find(p => p.id === 'testimonial-3')?.imageUrl || '',
-      imageHint: PlaceHolderImages.find(p => p.id === 'testimonial-3')?.imageHint,
-      quote:
-        "O suporte sob demanda é um diferencial incrível. Nossa equipe agora consegue resolver bloqueios complexos em horas, não em dias.",
-    },
+const howItWorksSteps = [
+  {
+    step: 1,
+    title: "Diagnóstico técnico",
+    description: "Você responde um questionário rápido.",
+  },
+  {
+    step: 2,
+    title: "Análise especializada",
+    description: "Avaliamos negócio, tecnologia e operação.",
+  },
+  {
+    step: 3,
+    title: "Painel personalizado",
+    description: "Você recebe um ambiente sob medida.",
+  },
 ];
 
-export default function HomePage() {
-  const heroImage = PlaceHolderImages.find((p) => p.id === "hero");
 
+export default function HomePage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative w-full py-20 md:py-32 bg-card">
+      <section className="w-full py-20 md:py-32 bg-background">
         <div className="container mx-auto px-4 md:px-6 text-center">
-            <h1 className="text-4xl md:text-6xl font-bold font-headline tracking-tight text-primary">
-                Transforme sua Tecnologia, Acelere seu Negócio
+            <h1 className="text-4xl md:text-6xl font-bold font-headline tracking-tight">
+                Soluções técnicas inovadoras para sua empresa.
             </h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-                Receba um diagnóstico técnico completo e um roadmap estratégico para guiar a evolução da sua arquitetura de software e infraestrutura.
+                Consultoria técnica personalizada em software, sistemas, IA e Tech Ops.
             </p>
             <div className="mt-8 flex justify-center gap-4">
                 <Button size="lg" asChild>
-                    <Link href="/cadastro">Iniciar Diagnóstico Técnico</Link>
+                    <Link href="/cadastro">Iniciar diagnóstico técnico</Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild>
-                    <Link href="/como-funciona">Saber Mais</Link>
-                </Button>
+            </div>
+            <div className="mt-4">
+                <Link href="#" className="text-sm underline hover:text-primary">
+                    Falar com especialista
+                </Link>
             </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 md:py-24">
+      <section className="py-20 md:py-24 bg-card">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold font-headline">Uma plataforma, soluções completas</h2>
-            <p className="mt-3 max-w-2xl mx-auto text-muted-foreground">
-              Da análise à execução, nossa plataforma oferece tudo que sua equipe precisa para inovar com confiança.
-            </p>
-          </div>
           <div className="grid gap-8 md:grid-cols-3">
             {features.map((feature, index) => (
-              <Card key={index} className="flex flex-col items-center text-center p-6">
+              <Card key={index} className="flex flex-col items-start text-left p-6 border-none shadow-none bg-transparent">
                 <div className="mb-4">{feature.icon}</div>
-                <CardTitle className="mb-2 font-headline">{feature.title}</CardTitle>
+                <CardTitle className="mb-2 font-headline text-xl">{feature.title}</CardTitle>
                 <p className="text-muted-foreground">{feature.description}</p>
               </Card>
             ))}
           </div>
         </div>
       </section>
-
+      
       {/* How It Works Section */}
-      <section className="py-20 md:py-24 bg-card">
+      <section className="py-20 md:py-24 bg-background">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold font-headline">Seu guia para a excelência técnica</h2>
-              <p className="mt-4 text-muted-foreground">
-                Nosso processo é desenhado para ser rápido, eficiente e profundamente impactante, fornecendo insights valiosos desde o primeiro dia.
-              </p>
-              <ul className="mt-6 space-y-4">
-                <li className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-primary mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold">Questionário Inteligente</h3>
-                    <p className="text-muted-foreground">Responda perguntas direcionadas sobre seu negócio, time e tecnologia.</p>
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-primary mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold">Análise por IA</h3>
-                    <p className="text-muted-foreground">Nossos algoritmos processam suas respostas para gerar um diagnóstico completo.</p>
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-primary mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold">Dashboard Interativo</h3>
-                    <p className="text-muted-foreground">Explore seu roadmap, acesse documentos e conecte-se com consultores.</p>
-                  </div>
-                </li>
-              </ul>
+          <div className="text-left mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold font-headline">Como funciona</h2>
+          </div>
+          <div className="relative">
+            <div className="hidden md:block absolute top-8 left-0 w-full h-px -z-10">
+                <svg width="100%" height="2">
+                    <line x1="0" y1="1" x2="100%" y2="1" strokeWidth="1" strokeDasharray="5,5" className="stroke-border" />
+                </svg>
             </div>
-            <div className="relative h-80 w-full rounded-lg overflow-hidden shadow-lg">
-                {heroImage && 
-                    <Image
-                    src={heroImage.imageUrl}
-                    alt={heroImage.description}
-                    data-ai-hint={heroImage.imageHint}
-                    fill
-                    style={{ objectFit: 'cover' }}
-                    />
-                }
+            <div className="grid gap-8 md:grid-cols-3">
+                {howItWorksSteps.map((step, index) => (
+                <div key={index} className="flex items-start gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground font-bold text-2xl font-headline border-4 border-background flex-shrink-0">
+                    {step.step}
+                    </div>
+                    <div>
+                    <h3 className="text-lg font-semibold mb-1">{step.title}</h3>
+                    <p className="text-muted-foreground">{step.description}</p>
+                    </div>
+                </div>
+                ))}
             </div>
           </div>
         </div>
       </section>
       
-      {/* Testimonials Section */}
-      <section className="py-20 md:py-24">
+      {/* Tech Lab Info Section */}
+      <section className="py-20 md:py-24 bg-card">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold font-headline">Confiado por líderes de tecnologia</h2>
-            <p className="mt-3 max-w-xl mx-auto text-muted-foreground">
-              Veja o que nossos clientes estão dizendo sobre a Tech Lab.
-            </p>
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold font-headline">Tech Lab</h2>
+              <p className="mt-4 text-muted-foreground text-lg">
+                O Tech Lab é nosso ambiente de engenharia, onde analisamos protótipos, sistemas e negócios digitais com foco em viabilidade, escala e operação.
+              </p>
+              <Link href="/como-funciona" className="mt-6 inline-flex items-center text-primary font-semibold hover:underline">
+                  Conhecer o Tech Lab <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </div>
+            <div className="bg-background rounded-lg p-8">
+              <p className="text-xl font-medium">Sem Tech Ops, sistemas viram risco.</p>
+              <p className="text-xl font-medium mt-2">Com Tech Ops, viram produtos confiáveis.</p>
+            </div>
           </div>
-          <div className="grid gap-8 md:grid-cols-3">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index}>
-                <CardContent className="pt-6">
-                  <p className="italic">"{testimonial.quote}"</p>
-                </CardContent>
-                <CardHeader className="flex-row items-center gap-4">
-                   <Avatar>
-                        <AvatarImage src={testimonial.image} alt={testimonial.name} data-ai-hint={testimonial.imageHint} />
-                        <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                  <div>
-                    <CardTitle className="text-base">{testimonial.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{testimonial.title}</p>
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
+        </div>
+      </section>
+
+      {/* Final CTA Section */}
+      <section className="py-20 md:py-24 bg-background">
+        <div className="container mx-auto px-4 md:px-6 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold font-headline tracking-tight">
+                Pronto para evoluir com segurança?
+            </h2>
+            <div className="mt-8 flex justify-center">
+                <Button size="lg" asChild>
+                    <Link href="/cadastro">Iniciar diagnóstico técnico</Link>
+                </Button>
+            </div>
         </div>
       </section>
     </>
