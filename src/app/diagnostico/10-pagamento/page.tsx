@@ -187,6 +187,12 @@ export default function PaymentPage() {
                 </Button>
             </div>
 
+            <div className="text-center text-xs text-muted-foreground px-4">
+                Ao clicar em uma das opções de pagamento, você cria sua conta, concorda com
+                nossos <Link href="/termos-de-servico" className="underline hover:text-primary" target="_blank">Termos de Serviço</Link> e
+                assina o contrato de prestação de serviços que será enviado para seu e-mail.
+            </div>
+
             <div className="text-center text-sm">
               <Dialog>
                 <DialogTrigger asChild>

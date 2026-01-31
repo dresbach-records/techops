@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import type { DiagnosticData } from "./DiagnosticContext";
+import { getContractText } from "@/lib/contract";
 
 interface AuthContextType {
   user: AppUser | null;
@@ -90,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!data.user) throw new Error("Cadastro falhou, usuário não retornado.");
 
     // Flatten the diagnostic data for insertion
-    const { pessoa, contato, projeto, pagamento } = diagnosticData;
+    const { pessoa, contato, projeto } = diagnosticData;
     const diagnosticRecord = {
         user_id: data.user.id,
         nome: pessoa.nome,
@@ -103,7 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         dores: projeto.dores,
         repositorio: projeto.repositorio,
         expectativa: projeto.expectativa,
-        descricao_problema: projeto.descricao_problema,
         metodo_pagamento: paymentMethod,
         status_pagamento: paymentMethod === 'card' ? 'pago' : 'pendente',
     };
@@ -118,6 +118,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(
         "Sua conta foi criada, mas houve um erro ao salvar seu diagnóstico. Por favor, contate o suporte."
       );
+    }
+
+    // Simulate sending contract email
+    try {
+      const contractText = getContractText(name);
+      console.log(`
+      -----------------------------------------------------
+      SIMULANDO ENVIO DE E-MAIL
+      -----------------------------------------------------
+      PARA: ${email}
+      ASSUNTO: Seu Contrato com a Tech Lab
+      
+      Olá ${name},
+      
+      Seja bem-vindo(a) à Tech Lab! Conforme nossos termos, ao finalizar seu cadastro, você concordou com o contrato de prestação de serviços.
+      
+      Uma cópia está anexada abaixo para seus registros.
+      
+      --- INÍCIO DO CONTRATO ---
+      ${contractText}
+      --- FIM DO CONTRATO ---
+      
+      Seu painel já está acessível.
+      
+      Atenciosamente,
+      Equipe Tech Lab
+      -----------------------------------------------------
+      `);
+    } catch (e) {
+        console.error("Falha ao simular envio de e-mail do contrato.", e);
+        // Non-critical error, so we don't throw. The user account is already created.
     }
   };
 
