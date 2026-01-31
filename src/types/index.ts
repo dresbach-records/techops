@@ -16,3 +16,30 @@ export type Plan = {
   minMonths: number;
   features: string[];
 };
+
+export type DashboardOverviewCard = {
+  title: string;
+  value: string;
+  description?: string;
+  icon: string;
+};
+
+export type DashboardNextStep = {
+  title: string;
+  description: string;
+  status: string;
+};
+
+export type DashboardProjectDocument = {
+    title: string;
+    icon: string;
+    link: string;
+}
+
+export type DashboardData = {
+  welcomeMessage: string;
+  welcomeSubtext: string;
+  overviewCards: DashboardOverviewCard[];
+  nextSteps: DashboardNextStep[];
+  projectDocuments: DashboardProjectDocument[];
+};

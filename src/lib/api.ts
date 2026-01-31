@@ -1,4 +1,6 @@
 // This file is the new API client for communicating with the Go backend.
+import type { DashboardData, Plan } from "@/types";
+
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1';
 
@@ -32,7 +34,7 @@ export async function login(email: string, password: string): Promise<{ token: s
     return handleResponse(response);
 }
 
-export async function getRecommendedPlan(projectData: { estagio?: string; dores?: string[]; repositorio?: string; }): Promise<any> {
+export async function getRecommendedPlan(projectData: { estagio?: string; dores?: string[]; repositorio?: string; }): Promise<Plan> {
     const response = await fetch(`${API_BASE_URL}/diagnostico/recommend-plan`, {
         method: 'POST',
         headers: {
@@ -47,5 +49,20 @@ export async function getRecommendedPlan(projectData: { estagio?: string; dores?
     return handleResponse(response);
 }
 
+export async function getDashboardData(): Promise<DashboardData> {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        throw new Error('Authentication token not found.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/dashboard`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+}
 
 // TODO: Add other endpoints as the backend grows (e.g., submitDiagnostic, getDashboardData, etc.)

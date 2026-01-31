@@ -10,6 +10,7 @@ import (
 	"techlab/backend-go/internal/diagnostico"
 	"techlab/backend-go/internal/email"
 	"techlab/backend-go/internal/pagamento"
+	"techlab/backend-go/internal/painel"
 	"techlab/backend-go/internal/users"
 	"techlab/backend-go/internal/whatsapp"
 	"time"
@@ -74,10 +75,12 @@ func NewServer(db *sql.DB) *gin.Engine {
 		log.Fatalf("FATAL: Could not initialize auth service: %v", err)
 	}
 	authHandler := auth.NewHandler(authSvc)
+	painelHandler := painel.NewHandler()
 
 	// API versioning group
 	v1 := router.Group("/v1")
 	{
+		// Public routes
 		authRoutes := v1.Group("/auth")
 		{
 			authRoutes.POST("/register", authHandler.Register)
@@ -94,6 +97,13 @@ func NewServer(db *sql.DB) *gin.Engine {
 		}
 
 		v1.POST("/payments/boleto", pagamento.GenerateBoletoHandler())
+
+		// Authenticated routes
+		api := v1.Group("/")
+		api.Use(auth.AuthRequired())
+		{
+			api.GET("/dashboard", painelHandler.GetDashboard)
+		}
 	}
 
 	return router
