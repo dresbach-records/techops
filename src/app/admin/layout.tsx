@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import React from "react";
 import { usePathname } from 'next/navigation';
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from "@/components/ui/sidebar";
 import { 
-    LayoutDashboard, Users, ClipboardCheck, Briefcase, Columns, Cpu, Server, CircleDollarSign, FileText, Shield, Settings, PanelLeft 
+    LayoutDashboard, Users, ClipboardCheck, Briefcase, Columns, Cpu, Server, AreaChart, FileText, Shield, PanelLeft, Menu, Bell, HelpCircle, Power
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminUserNav } from "@/components/layout/AdminUserNav";
-import React from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navItems = [
@@ -20,10 +19,9 @@ const navItems = [
     { href: "/admin/paineis-clientes", label: "Painéis dos Clientes", icon: <Columns /> },
     { href: "/admin/ia-automacao", label: "IA & Automação", icon: <Cpu /> },
     { href: "/admin/tech-lab", label: "Tech Lab", icon: <Server /> },
-    { href: "/admin/financeiro", label: "Financeiro", icon: <CircleDollarSign /> },
+    { href: "/admin/financeiro", label: "Financeiro", icon: <AreaChart /> },
     { href: "/admin/conteudo-templates", label: "Conteúdo & Templates", icon: <FileText /> },
     { href: "/admin/usuarios-internos", label: "Usuários Internos", icon: <Shield /> },
-    { href: "/admin/configuracoes", label: "Configurações", icon: <Settings /> },
 ];
 
 function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }) {
@@ -32,8 +30,9 @@ function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }
     const sidebarContent = (
          <>
             <SidebarHeader>
-                <Link href="/admin" className="flex items-center justify-center p-2">
-                    <Image src="/logotech.png" alt="Tech Lab Logo" width={500} height={500} className="size-20" />
+                <Link href="/admin" className="flex items-center gap-2 p-4">
+                    <Menu className="h-6 w-6" />
+                    <h1 className="text-xl font-bold text-primary font-headline">TECH LAB</h1>
                 </Link>
             </SidebarHeader>
             <SidebarContent>
@@ -43,6 +42,7 @@ function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }
                             <SidebarMenuButton
                                 asChild
                                 isActive={pathname === item.href}
+                                className="justify-start"
                             >
                                 <Link href={item.href}>
                                     {item.icon}
@@ -53,6 +53,11 @@ function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }
                     ))}
                 </SidebarMenu>
             </SidebarContent>
+            <SidebarFooter>
+                <div className="text-xs text-sidebar-foreground/50 p-4">
+                    TECH LAB © 2024
+                </div>
+            </SidebarFooter>
         </>
     );
 
@@ -63,7 +68,7 @@ function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }
             </Sidebar>
 
             <div className="flex-1 flex flex-col">
-                <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4 md:px-6">
+                <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
                     <Sheet>
                         <SheetTrigger asChild>
                             <Button
@@ -81,12 +86,19 @@ function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }
                            </Sidebar>
                         </SheetContent>
                     </Sheet>
-                    <div className="w-full flex-1">
-                       <h1 className="font-semibold text-lg">Painel Administrativo Tech Lab</h1>
+                    <div className="w-full flex-1 flex items-center justify-end gap-4">
+                        <Button variant="ghost" size="sm" className="gap-2">
+                            <Bell className="h-4 w-4" />
+                            Notificações
+                        </Button>
+                        <Button variant="ghost" size="sm" className="gap-2">
+                           <HelpCircle className="h-4 w-4" />
+                           Ajuda
+                        </Button>
+                        <AdminUserNav />
                     </div>
-                    <AdminUserNav />
                 </header>
-                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-muted/40">
+                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-muted">
                     {children}
                 </main>
             </div>
