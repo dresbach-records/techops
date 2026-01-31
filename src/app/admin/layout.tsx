@@ -10,10 +10,9 @@ import {
     SidebarMenu, 
     SidebarMenuItem, 
     SidebarMenuButton, 
-    SidebarFooter 
 } from "@/components/ui/sidebar";
 import { 
-    LayoutDashboard, Users, ClipboardCheck, Briefcase, Columns, Cpu, Server, AreaChart, FileText, Shield, PanelLeft, Menu, Bell
+    LayoutDashboard, Users, ClipboardCheck, Briefcase, Columns, Cpu, Server, AreaChart, FileText, Shield, Menu, Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminUserNav } from "@/components/layout/AdminUserNav";
@@ -38,32 +37,30 @@ function AdminSidebarContent() {
     const pathname = usePathname();
     
     return (
-        <>
-            <SidebarContent className="pt-6">
-                <SidebarMenu>
-                    {navItems.map((item) => (
-                        <SidebarMenuItem key={item.href}>
-                            <SidebarMenuButton
-                                asChild
-                                isActive={pathname === item.href}
-                                className="justify-start"
-                                tooltip={{children: item.label}}
-                            >
-                                <Link href={item.href}>
-                                    {item.icon}
-                                    <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    ))}
-                </SidebarMenu>
-            </SidebarContent>
-        </>
+        <SidebarContent className="pt-6">
+            <SidebarMenu>
+                {navItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={pathname === item.href}
+                            className="justify-start"
+                            tooltip={{children: item.label}}
+                        >
+                            <Link href={item.href}>
+                                {item.icon}
+                                <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                ))}
+            </SidebarMenu>
+        </SidebarContent>
     )
 }
 
 function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }) {
-    const { open, setOpen } = useSidebar();
+    const { open } = useSidebar();
     const state = open ? 'expanded' : 'collapsed';
 
     return (
@@ -91,14 +88,7 @@ function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }
                         </div>
                     </SheetContent>
                 </Sheet>
-                 <Button
-                    variant="ghost"
-                    size="icon"
-                    className="hidden md:flex"
-                    onClick={() => setOpen(!open)}
-                >
-                    <PanelLeft className="h-5 w-5" />
-                </Button>
+                
                 <div className="w-full flex-1 flex items-center justify-end gap-2">
                     <Button variant="ghost" size="icon" className="h-8 w-8">
                         <Bell className="h-4 w-4" />
@@ -110,7 +100,7 @@ function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }
             <div className="flex flex-1 overflow-hidden">
                 <aside 
                     data-state={state} 
-                    data-collapsible={state === "collapsed" ? "icon" : undefined}
+                    data-collapsible={"icon"}
                     className={cn(
                         "hidden md:flex flex-col bg-muted border-r transition-[width] duration-300 group overflow-y-auto",
                         state === 'expanded' ? 'w-64' : 'w-[60px]'
@@ -119,7 +109,7 @@ function AdminDashboardLayoutContent({ children }: { children: React.ReactNode }
                     <AdminSidebarContent />
                 </aside>
 
-                <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+                <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto bg-muted/40">
                     {children}
                 </main>
             </div>
@@ -136,7 +126,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
     // For now, we allow access to the admin dashboard to facilitate development.
     // A real app would have a dedicated AuthGuard for admins.
     return (
-        <SidebarProvider>
+        <SidebarProvider defaultOpen={false}>
             <AdminDashboardLayoutContent>{children}</AdminDashboardLayoutContent>
         </SidebarProvider>
     );

@@ -26,19 +26,23 @@ export function AdminUserNav() {
   };
 
   const getInitials = (name: string) => {
-    return "A";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="flex items-center gap-2 h-10 px-3">
-          <Avatar className="h-7 w-7">
+        <Button variant="ghost" className="relative h-10 px-2 flex items-center gap-2">
+          <Avatar className="h-8 w-8">
             <AvatarImage src={`https://avatar.vercel.sh/admin.png`} alt={user.name} />
             <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium">Admin</span>
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          <span className="hidden sm:inline-block font-medium">{user.name}</span>
+          <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:inline-block" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>

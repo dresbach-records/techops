@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { SidebarProvider, useSidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { LayoutDashboard, ClipboardCheck, GitFork, FileText, Briefcase, PanelLeft, Menu, Bell } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, GitFork, FileText, Briefcase, Menu, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserNav } from "@/components/layout/UserNav";
 import React from "react";
@@ -46,7 +46,7 @@ function ClientSidebarContent() {
 
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
-    const { open, setOpen } = useSidebar();
+    const { open } = useSidebar();
     const state = open ? 'expanded' : 'collapsed';
 
     return (
@@ -74,15 +74,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                         </div>
                     </SheetContent>
                 </Sheet>
-
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="hidden md:flex"
-                    onClick={() => setOpen(!open)}
-                >
-                    <PanelLeft className="h-5 w-5" />
-                </Button>
 
                 <div className="w-full flex-1 flex items-center justify-end gap-2">
                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -119,7 +110,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
         // <AuthGuard access="paid">
-            <SidebarProvider>
+            <SidebarProvider defaultOpen={false}>
                 <DashboardLayoutContent>{children}</DashboardLayoutContent>
             </SidebarProvider>
         // </AuthGuard>
