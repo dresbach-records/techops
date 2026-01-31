@@ -1,3 +1,4 @@
+"use client";
 // This file is the new API client for communicating with the Go backend.
 import type { AppUser, DashboardData, Plan } from "@/types";
 
