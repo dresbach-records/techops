@@ -1,105 +1,176 @@
-# Tech Lab Platform
+# Tech Lab  
+## Engineering the Internet, Not Just Code
 
-> Plataforma SaaS de consultoria técnica personalizada, onde clientes passam por um diagnóstico estruturado, realizam o pagamento e recebem um painel sob medida, gerado conforme suas necessidades de negócio, tecnologia e maturidade.
-
-O sistema foi projetado com uma arquitetura de engenharia de software, com foco em escalabilidade, segurança e operação profissional (Tech Ops).
-
----
-
-## 🎯 Objetivo do Projeto
-
-Oferecer consultoria técnica estratégica para:
-
--   Protótipos e MVPs
--   Produtos digitais em produção
--   Negócios web e SaaS em escala
-
-Nosso objetivo é transformar as respostas de um questionário inteligente em:
-
--   **Diagnóstico técnico** detalhado.
--   **Roadmap estratégico** acionável.
--   **Painel do cliente** personalizado.
--   **Liberação de funcionalidades** condicionada a pagamentos.
--   **Uso de IA** como apoio técnico, nunca como sistema autônomo.
+**Tech Lab** é um projeto open-source que propõe um novo padrão para criação, correção e evolução de produtos digitais.  
+Aqui, **engenharia vem antes do código** — e a IA atua como sistema operacional do processo, não como atalho.
 
 ---
 
-## 🧱 Arquitetura Final (FLAGSHIP)
+## 🌍 Por que a Tech Lab existe
 
-O sistema opera sob uma arquitetura de responsabilidade única, onde o **Backend (Go) é a fonte da verdade absoluta**.
+A internet não sofre por falta de código.  
+Ela sofre por falta de **método, contexto e engenharia responsável**.
 
-### Frontend (Next.js)
+Problemas comuns hoje:
+- produtos começam pelo código, não pelo conceito
+- decisões técnicas não ficam registradas
+- erros são corrigidos sem entender a causa
+- conversas técnicas se perdem
+- dependência excessiva de indivíduos
 
-Camada de apresentação pura. Responsável pela UI/UX, coleta de dados e navegação.
--   **NUNCA** contém regras de negócio.
--   **NUNCA** se conecta diretamente ao banco de dados.
--   **NUNCA** chama serviços de IA diretamente.
-
-### Backend (Go)
-
-O coração do sistema e a única fonte da verdade.
--   **Controla**: Autenticação (JWT + RBAC), regras de negócio, planos, pagamentos, permissões, painéis, e a integração com o WhatsApp Bot e o serviço de IA.
--   **Toda decisão nasce aqui.**
-
-### Banco de Dados (Supabase/Postgres)
-
-Atua exclusivamente como um banco de dados relacional.
--   **NÃO** é usado para autenticação no frontend.
--   **NÃO** possui lógica de negócio (Policies, RLS, Functions).
--   **NÃO** é acessado por nenhum SDK no cliente.
-
-### IA Service (Python / Genkit)
-
-Serviço de apoio à decisão, chamado **exclusivamente** pelo backend Go.
--   Retorna **JSON estruturado**, nunca texto livre para decisões.
--   Toda interação é auditável e registrada pelo backend.
+A Tech Lab nasce para **corrigir isso na raiz**.
 
 ---
 
-## 📌 Princípios da Arquitetura
+## 🧠 O que estamos construindo
 
-1.  **Backend é a Fonte da Verdade**: Se é uma decisão, pertence ao backend. O frontend apenas renderiza o que a API autoriza.
-2.  **Autenticação Centralizada**: O Backend Go emite e valida todos os tokens JWT. O frontend apenas armazena e envia o token.
-3.  **Banco de Dados Isolado**: O acesso direto do cliente (frontend) ao banco de dados é estritamente proibido.
-4.  **IA como Serviço de Apoio**: A IA sugere, o backend valida, decide e audita.
-5.  **Painel como Contrato**: A UI do cliente é um reflexo direto do que o backend permitiu, baseado em seu plano e status.
-6.  **Segurança por Design**: Webhooks são validados, endpoints são protegidos (rate limit, RBAC), e todos os segredos residem no backend.
-7.  **Observabilidade por Padrão**: O sistema nasce com logs estruturados, healthchecks reais e métricas, garantindo que não opere como uma caixa-preta.
+A Tech Lab é uma **camada de engenharia operacional assistida por IA**, onde:
 
----
+- cada projeto é um *workspace técnico vivo*
+- cada erro é analisado com contexto completo
+- cada correção é versionada em Git
+- cada decisão é rastreável
+- a IA guia o processo com método
+- humanos assumem decisões críticas
 
-## ⚙️ Fluxo Principal do Produto
-
-O cliente não compra um sistema pronto. Ele passa por um diagnóstico, paga pela consultoria e recebe um ambiente ajustado às suas necessidades.
-
-```
-Site → Cadastro → Questionário → Pagamento → Análise (Backend + IA) → Painel Configurado → Consultoria Ativa
-```
+> Produtos não nascem do código.  
+> Nascem de conceitos bem projetados — o código é consequência.
 
 ---
 
-## 🛠️ Operação e Saúde do Sistema (Tech Ops)
+## 🤖 IA como sistema operacional
 
-A saúde do sistema é monitorada através do backend, garantindo uma operação profissional.
+Na Tech Lab, a IA não é um chatbot.
 
--   **Healthcheck**: O endpoint `GET /health` verifica o status da API, a conexão com o banco de dados e a comunicação com serviços externos em tempo real.
--   **Logs Estruturados**: Todas as ações e erros são registrados em formato JSON com um `request_id` único para rastreamento completo de ponta a ponta.
--   **Painel de Tech Ops**: A área de administração (`/admin/tech-lab`) oferece uma visão centralizada sobre a saúde dos serviços, latência, métricas e logs críticos.
--   **Segurança**: Endpoints críticos são protegidos com `rate-limiting` e todos os webhooks (Pagamentos, WhatsApp) validam assinaturas para garantir a integridade.
+Ela atua como:
+- engenheiro de produto
+- arquiteto de sistemas
+- analista técnico
+- orquestrador de processos
 
----
+Capaz de trabalhar **simultaneamente com milhares de projetos**, mantendo:
+- contexto isolado por projeto
+- histórico técnico persistente
+- método consistente
+- limites claros de responsabilidade
 
-## 🚀 Preparo para Escala Futura
-
-A arquitetura foi projetada para evoluir. As seguintes áreas são pontos estratégicos para futuras otimizações:
-
--   **Cache**: Endpoints de leitura intensiva (configuração de painéis, etc.) podem ser otimizados com uma camada de cache (ex: Redis).
--   **Filas (Queues)**: Processos assíncronos (envio de e-mails, notificações) podem ser delegados a uma fila (ex: RabbitMQ, SQS) para aumentar a resiliência e a responsividade da API.
--   **IA e Custos**: O serviço de IA, sendo um ponto de custo variável, deve ter seu uso monitorado por cliente. As chamadas podem ser otimizadas e cacheadas.
--   **Backup e Restore**: O procedimento de backup do banco de dados (Postgres) deve ser automatizado e testado periodicamente.
+É como ter **um engenheiro sênior distribuído**, disponível 24/7.
 
 ---
 
-## 📄 Licença
+## 📁 Projetos como “pastas vivas”
 
-Projeto privado. Uso interno para consultoria técnica personalizada. Distribuição ou uso comercial externo apenas mediante autorização.
+Cada projeto funciona como uma pasta técnica completa:
+
+- diagnóstico
+- erros detectados
+- chat contextual
+- tarefas técnicas
+- correções guiadas
+- versionamento Git
+- histórico auditável
+
+Nada acontece fora do projeto.  
+Nada se perde em mensagens soltas.
+
+---
+
+## 🧑‍💻 Para desenvolvedores
+
+Este projeto é para você se:
+
+- acredita que engenharia é mais que código
+- se incomoda com improviso e retrabalho
+- gosta de sistemas bem pensados
+- quer contribuir com algo estrutural
+- acredita em open-source com propósito
+
+Aqui você não vai apagar incêndios.  
+Você vai **construir o método que evita o incêndio**.
+
+---
+
+## 🏢 Para empresas e organizações globais
+
+A Tech Lab oferece:
+- padronização técnica global
+- governança e rastreabilidade
+- redução de risco operacional
+- escala sem perda de qualidade
+- decisões técnicas auditáveis
+
+Independentemente do país, time ou stack,  
+**o método é o mesmo**.
+
+---
+
+## 💎 O que torna a Tech Lab diferente
+
+A Tech Lab não é:
+- apenas um SaaS
+- apenas uma consultoria
+- apenas um produto de IA
+
+Ela é uma **nova camada da internet**:
+> uma camada de engenharia operacional, assistida por IA.
+
+---
+
+## 🤝 Open-source com responsabilidade
+
+Este projeto é open-source porque:
+- bons métodos devem ser compartilhados
+- conhecimento técnico não deve se perder
+- a comunidade melhora sistemas estruturais
+
+Mas com responsabilidade:
+- decisões registradas
+- limites claros da IA
+- humanos como responsáveis finais
+- versionamento obrigatório
+
+---
+
+## 🚀 Apoie o projeto
+
+Se você acredita que:
+- a internet precisa de melhores fundamentos
+- engenharia deve vir antes do hype
+- IA deve ampliar humanos, não substituí-los
+- produtos devem nascer bem projetados
+
+👉 Considere apoiar a Tech Lab.
+
+Seu apoio ajuda a:
+- manter o projeto aberto
+- financiar infraestrutura
+- apoiar contribuidores
+- acelerar a evolução do método
+
+Não estamos pedindo apoio para “mais um app”.  
+Estamos construindo **um novo padrão**.
+
+---
+
+## 🧠 Frase fundadora
+
+> **“A Tech Lab não resolve bugs.  
+Ela resolve a forma como a internet resolve problemas.”**
+
+---
+
+## 📌 Como contribuir
+
+- Código
+- Arquitetura
+- Documentação
+- Discussões técnicas
+- Pesquisa
+- Patrocínio
+
+Todos são bem-vindos — desde que tragam **método, clareza e responsabilidade**.
+
+---
+
+## 📜 Licença
+Definir (ex: MIT / Apache 2.0 / GPL conforme estratégia)
