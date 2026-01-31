@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -201,7 +200,7 @@ export default function PaymentPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { data: diagnosticData, resetData } = useDiagnostic();
-  const { isAuthenticated, signUpFromDiagnostic, recordDiagnosticAndPay } = useAuth();
+  const { user, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState<'card' | 'boleto' | null>(null);
   const [selectedInstallment, setSelectedInstallment] = useState('1');
 
@@ -214,11 +213,24 @@ export default function PaymentPage() {
   const handlePayment = async (method: 'card' | 'boleto') => {
     setIsLoading(method);
     try {
-        if (isAuthenticated) {
-            await recordDiagnosticAndPay(diagnosticData, method, recommendedPlan);
-        } else {
-            await signUpFromDiagnostic(diagnosticData, method, recommendedPlan);
+        // If user is not logged in, sign them up first.
+        if (!user) {
+            const { nome } = diagnosticData.pessoa;
+            const { email } = diagnosticData.contato;
+            const { senha } = diagnosticData.seguranca;
+
+            if (!nome || !email || !senha) {
+                throw new Error("Nome, e-mail e senha são necessários para criar a conta.");
+            }
+            await signUp(nome, email, senha);
         }
+        
+        // TODO: In the next step, we will create an endpoint in the Go backend
+        // to handle diagnostic submission and payment processing with Asaas.
+        // For now, we simulate success.
+
+        console.log("Simulating payment for method:", method);
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         toast({
             title: "Processo finalizado com sucesso!",

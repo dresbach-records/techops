@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"techlab/backend-go/internal/auth"
 	"techlab/backend-go/internal/email"
 	"techlab/backend-go/internal/pagamento"
+	"techlab/backend-go/internal/users"
 	"techlab/backend-go/internal/whatsapp"
 	"time"
 
@@ -59,20 +61,27 @@ func NewServer(db *sql.DB) *gin.Engine {
 	router.GET("/webhooks/whatsapp", whatsapp.VerifyWebhook)
 	router.POST("/webhooks/whatsapp", whatsapp.ReceiveWebhook)
 
-	// Initialize email service
+	// Initialize services
 	emailSvc, err := email.NewResendService()
 	if err != nil {
-		// We don't want to kill the server if email fails to init, just log it.
 		log.Printf("WARNING: Could not initialize email service: %v. Emails will be simulated.", err)
 	}
+
+	userRepo := users.NewRepository(db)
+	authSvc, err := auth.NewService(userRepo)
+	if err != nil {
+		log.Fatalf("FATAL: Could not initialize auth service: %v", err)
+	}
+	authHandler := auth.NewHandler(authSvc)
 
 	// API versioning group
 	v1 := router.Group("/v1")
 	{
-		// Placeholder for future endpoints
-		v1.GET("/placeholder", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{"message": "API v1 is working"})
-		})
+		authRoutes := v1.Group("/auth")
+		{
+			authRoutes.POST("/register", authHandler.Register)
+			authRoutes.POST("/login", authHandler.Login)
+		}
 
 		if emailSvc != nil {
 			v1.POST("/send-email", email.SendEmailHandler(emailSvc))

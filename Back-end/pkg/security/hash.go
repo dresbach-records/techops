@@ -1,3 +1,15 @@
 package security
 
-// This file will contain password hashing and comparison functions (bcrypt/argon2).
+import "golang.org/x/crypto/bcrypt"
+
+// HashPassword generates a bcrypt hash of the password.
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+// CheckPasswordHash compares a plain text password with a hash.
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}

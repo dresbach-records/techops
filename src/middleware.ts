@@ -1,8 +1,11 @@
-import { updateSession } from '@/lib/supabase/middleware'
-import { type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 
+// This middleware is now a simple pass-through.
+// The previous logic for Supabase session management is deprecated as the
+// frontend no longer communicates with Supabase directly.
+// We can re-introduce logic here later if needed for other purposes.
 export async function middleware(request: NextRequest) {
-  return await updateSession(request)
+  return NextResponse.next();
 }
 
 export const config = {
