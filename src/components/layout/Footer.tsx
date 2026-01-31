@@ -10,13 +10,17 @@ export function Footer() {
           <p className="text-muted-foreground text-sm">
             © {new Date().getFullYear()} Tech Lab
           </p>
-          <div className="flex space-x-4 mt-4 sm:mt-0 text-sm">
-            <Link href="/privacidade" className="text-muted-foreground hover:text-primary">
-              Privacidade
+          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mt-4 sm:mt-0 text-sm">
+            <Link href="/privacidade" className="text-muted-foreground hover:text-primary text-center">
+              Política de Privacidade
             </Link>
-            <span className="text-muted-foreground">|</span>
-            <Link href="/termos-de-servico" className="text-muted-foreground hover:text-primary">
-              Termos
+            <span className="text-muted-foreground hidden sm:inline">|</span>
+            <Link href="/termos-de-servico" className="text-muted-foreground hover:text-primary text-center">
+              Termos de Serviço
+            </Link>
+            <span className="text-muted-foreground hidden sm:inline">|</span>
+            <Link href="/privacidade" className="text-muted-foreground hover:text-primary text-center">
+              Exclusão de Dados do Usuário
             </Link>
           </div>
         </div>
