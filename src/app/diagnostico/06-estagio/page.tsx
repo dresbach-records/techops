@@ -5,9 +5,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDiagnostic } from "@/contexts/DiagnosticContext";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useRouter } from "next/navigation";
+import { Label } from "@/components/ui/label";
 
 const schema = z.object({
     estagio: z.string({ required_error: "Por favor, selecione um estágio." }),
