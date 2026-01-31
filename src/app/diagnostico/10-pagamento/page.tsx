@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Loader2, ChevronLeft } from "lucide-react";
+import { CreditCard, Loader2, ChevronLeft, FileDown } from "lucide-react";
 import { useState } from "react";
 import { useDiagnostic } from "@/contexts/DiagnosticContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -42,8 +43,17 @@ const invoiceItems = [
 const total = invoiceItems.reduce((acc, item) => acc + item.price, 0);
 
 function ExtratoDialogContent() {
+    const { toast } = useToast();
+
+    const handleDownloadPdf = () => {
+        toast({
+          title: "Download Iniciado",
+          description: "O seu extrato em PDF está sendo gerado e o download começará em breve.",
+        });
+    };
+
     return (
-        <DialogContent className="max-w-2xl p-0">
+        <DialogContent className="max-w-lg p-0">
             <DialogHeader className="p-6 pb-0">
                 <DialogTitle className="text-2xl font-headline">Extrato de Serviço</DialogTitle>
                 <DialogDescription>Detalhes da sua contratação com a Tech Lab.</DialogDescription>
@@ -87,27 +97,29 @@ function ExtratoDialogContent() {
                   </Table>
               </div>
             </div>
-            <div className="bg-muted/50 p-6 rounded-b-lg">
-                <div className="w-full flex justify-end">
-                    <div className="grid gap-2 text-right w-full max-w-sm">
-                        <div className="flex justify-between items-center gap-4">
-                            <p className="font-semibold">Subtotal</p>
-                            <p>{(total - invoiceItems.find(item => item.price < 0)!.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
-                        </div>
-                        <div className="flex justify-between items-center gap-4">
-                            <p className="font-semibold text-destructive">Descontos</p>
-                            <p className="text-destructive">{invoiceItems.find(item => item.price < 0)!.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
-                        </div>
-                        <Separator className="my-2" />
-                        <div className="flex justify-between items-center gap-4">
-                            <p className="text-lg font-bold">Total a Pagar</p>
-                            <p className="text-lg font-bold">
-                                {total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                            </p>
-                        </div>
+            <DialogFooter className="bg-muted/50 p-6 rounded-b-lg flex-col sm:flex-row sm:justify-between items-center w-full">
+                <Button onClick={handleDownloadPdf} variant="outline">
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Baixar PDF
+                </Button>
+                <div className="grid gap-2 text-right w-full max-w-xs">
+                    <div className="flex justify-between items-center gap-4">
+                        <p className="font-semibold">Subtotal</p>
+                        <p>{(total - invoiceItems.find(item => item.price < 0)!.price).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
+                    </div>
+                    <div className="flex justify-between items-center gap-4">
+                        <p className="font-semibold text-destructive">Descontos</p>
+                        <p className="text-destructive">{invoiceItems.find(item => item.price < 0)!.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
+                    </div>
+                    <Separator className="my-2" />
+                    <div className="flex justify-between items-center gap-4">
+                        <p className="text-lg font-bold">Total a Pagar</p>
+                        <p className="text-lg font-bold">
+                            {total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </p>
                     </div>
                 </div>
-            </div>
+            </DialogFooter>
         </DialogContent>
     );
 }
