@@ -53,11 +53,11 @@ func NewServer(db *sql.DB) *gin.Engine {
 
 	router := gin.New()
 
-	// Middlewares
-	router.Use(gin.Recovery()) // Recover from any panics
-	router.Use(LoggerMiddleware())
+	// Middlewares - Order is important: RequestID -> Logger -> Recovery -> Security
 	router.Use(RequestIDMiddleware())
-	router.Use(SecurityHeadersMiddleware()) // Add security headers
+	router.Use(LoggerMiddleware())
+	router.Use(gin.Recovery())
+	router.Use(SecurityHeadersMiddleware())
 
 	// CORS configuration
 	// Allow only the specific frontend URL.
@@ -68,7 +68,7 @@ func NewServer(db *sql.DB) *gin.Engine {
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{frontendURL},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Request-ID"},
 		ExposeHeaders:    []string{"Content-Length", "X-Request-ID"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
@@ -76,21 +76,42 @@ func NewServer(db *sql.DB) *gin.Engine {
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
+		healthStatus := gin.H{
+			"api":       "ok",
+			"db":        "ok",
+			"ia":        "ok", // Mocked status, in a real scenario this would ping the AI service
+			"timestamp": time.Now().UTC().Format(time.RFC3339),
+		}
+		status := http.StatusOK
+
 		// Check database connection
 		if err := db.Ping(); err != nil {
-			log.Printf("ERROR: Database health check failed: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"db": "down"})
-			return
+			log.Printf("ERROR: Healthcheck DB ping failed: %v", err)
+			healthStatus["db"] = "down"
+			status = http.StatusInternalServerError
 		}
 
-		c.JSON(http.StatusOK, gin.H{"db": "ok"})
+		c.JSON(status, healthStatus)
+	})
+
+	// Basic metrics endpoint (placeholder)
+	router.GET("/metrics", func(c *gin.Context) {
+		// In a real app, this would be populated from a metrics collector (e.g., Prometheus client)
+		c.JSON(http.StatusOK, gin.H{
+			"requests_total": gin.H{
+				"/auth/login": 1024,
+				"/health":     5120,
+			},
+			"errors_5xx_total": 15,
+			"avg_response_ms":  78,
+		})
 	})
 
 	// Rate Limiter
 	rateLimiter := RateLimitMiddleware(20, time.Minute) // 20 requests per minute
 
 	// Webhook endpoints for WhatsApp - apply rate limiting
-	router.GET("/webhooks/whatsapp", whatsapp.VerifyWebhook) // Verification is less critical, but can be limited.
+	router.GET("/webhooks/whatsapp", whatsapp.VerifyWebhook)
 	router.POST("/webhooks/whatsapp", rateLimiter, whatsapp.ReceiveWebhook)
 
 	// Initialize services
@@ -147,42 +168,54 @@ func NewServer(db *sql.DB) *gin.Engine {
 // RequestIDMiddleware adds a unique request ID to each request.
 func RequestIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("X-Request-ID", uuid.New().String())
+		requestID := uuid.New().String()
+		c.Set("request_id", requestID)
+		c.Writer.Header().Set("X-Request-ID", requestID)
 		c.Next()
 	}
 }
 
-// LoggerMiddleware provides a simple JSON structured logger.
+// LoggerMiddleware provides a JSON structured logger.
 func LoggerMiddleware() gin.HandlerFunc {
-	return gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		logMap := make(map[string]interface{})
+	return func(c *gin.Context) {
+		start := time.Now()
+		c.Next() // Process request
 
-		logMap["status_code"] = param.StatusCode
-		logMap["client_ip"] = param.ClientIP
-		logMap["method"] = param.Method
-		logMap["path"] = param.Path
-		logMap["latency"] = param.Latency.String()
-		logMap["user_agent"] = param.Request.UserAgent()
-		logMap["time"] = param.TimeStamp.Format(time.RFC1123)
+		latency := time.Since(start)
+		status := c.Writer.Status()
 
-		if param.ErrorMessage != "" {
-			logMap["error"] = param.ErrorMessage
+		logMap := gin.H{
+			"level":       "info",
+			"timestamp":   start.UTC().Format(time.RFC3339),
+			"request_id":  c.GetString("request_id"),
+			"endpoint":    c.Request.URL.Path,
+			"method":      c.Request.Method,
+			"status":      status,
+			"latency_ms":  latency.Milliseconds(),
+			"client_ip":   c.ClientIP(),
 		}
 
+		if userID, exists := c.Get("userID"); exists {
+			logMap["user_id"] = userID
+		}
+		
+		if len(c.Errors) > 0 {
+			logMap["level"] = "error"
+			logMap["error"] = c.Errors.ByType(gin.ErrorTypePrivate).String()
+		}
+
+		if status >= 500 {
+			logMap["level"] = "error"
+		} else if status >= 400 {
+			logMap["level"] = "warning"
+		}
+		
 		logJSON, err := json.Marshal(logMap)
 		if err != nil {
-			// Fallback to string formatting if JSON marshaling fails
-			return fmt.Sprintf("[GIN] %v | %3d | %13v | %15s | %-7s %s\n%s",
-				param.TimeStamp.Format("2006/01/02 - 15:04:05"),
-				param.StatusCode,
-				param.Latency,
-				param.ClientIP,
-				param.Method,
-				param.Path,
-				param.ErrorMessage,
-			)
+			// Fallback if JSON marshaling fails
+			fmt.Fprintf(os.Stdout, "[LOGGER_ERROR] Failed to marshal log: %v\n", err)
+		} else {
+			fmt.Fprintln(os.Stdout, string(logJSON))
 		}
-
-		return string(logJSON) + "\n"
-	})
+	}
 }
