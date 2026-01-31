@@ -75,11 +75,12 @@ func (s *service) Login(email, password string) (string, error) {
 // generateJWT creates a new JWT for a given user.
 func (s *service) generateJWT(user *users.User) (string, error) {
 	claims := jwt.MapClaims{
-		"sub":  user.ID,
-		"name": user.Name,
-		"role": user.Role,
-		"exp":  time.Now().Add(time.Hour * 72).Unix(),
-		"iat":  time.Now().Unix(),
+		"sub":   user.ID,
+		"name":  user.Name,
+		"email": user.Email,
+		"role":  user.Role,
+		"exp":   time.Now().Add(time.Hour * 72).Unix(),
+		"iat":   time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

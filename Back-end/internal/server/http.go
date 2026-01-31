@@ -96,13 +96,14 @@ func NewServer(db *sql.DB) *gin.Engine {
 			v1.POST("/send-email", email.SendEmailHandler(emailSvc))
 		}
 
-		v1.POST("/payments/boleto", pagamento.GenerateBoletoHandler())
+		v1.POST("/webhooks/asaas/payment", pagamento.AsaasWebhookHandler())
 
 		// Authenticated routes
 		api := v1.Group("/")
 		api.Use(auth.AuthRequired())
 		{
 			api.GET("/dashboard", painelHandler.GetDashboard)
+			api.POST("/payments/boleto", pagamento.GenerateBoletoHandler())
 		}
 	}
 

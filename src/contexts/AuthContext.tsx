@@ -18,7 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<void>;
+  signUp: (name: string, email: string, password: string) => Promise<AppUser | null>;
   logout: () => void;
   // Deprecated/stubbed functions to avoid breaking old components immediately
   isPaid: boolean; 
@@ -31,7 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const decodeToken = (token: string): AppUser | null => {
   try {
-    const decoded: { sub: string; name: string; role: string; exp: number } = jwtDecode(token);
+    const decoded: { sub: string; name: string; email: string; role: string; exp: number } = jwtDecode(token);
     // Check if token is expired
     if (decoded.exp * 1000 < Date.now()) {
       return null;
@@ -39,7 +39,7 @@ const decodeToken = (token: string): AppUser | null => {
     return {
       id: decoded.sub,
       name: decoded.name,
-      email: '', // Not typically in JWT payload, would need another endpoint
+      email: decoded.email, 
       isPaid: false, // This logic needs to be moved to the backend
       plan: 'START', // This logic needs to be moved to the backend
     };
@@ -55,10 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const handleAuthSuccess = useCallback((token: string) => {
+  const handleAuthSuccess = useCallback((token: string): AppUser | null => {
     localStorage.setItem("authToken", token);
     const decodedUser = decodeToken(token);
     setUser(decodedUser);
+    return decodedUser;
   }, []);
   
   const logout = useCallback(() => {
@@ -93,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const signUp = async (name: string, email: string, password: string) => {
     const { token } = await apiRegister(name, email, password);
-    handleAuthSuccess(token);
+    return handleAuthSuccess(token);
   };
   
   // Stubs for deprecated functions to prevent crashes in other components.

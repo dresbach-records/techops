@@ -65,4 +65,40 @@ export async function getDashboardData(): Promise<DashboardData> {
     return handleResponse(response);
 }
 
-// TODO: Add other endpoints as the backend grows (e.g., submitDiagnostic, getDashboardData, etc.)
+interface BoletoRequest {
+    userCpf: string;
+    diagnosticId: string;
+    amount: number;
+    description: string;
+}
+
+interface BoletoResponse {
+    message: string;
+    asaas_customer_id: string;
+    asaas_payment_id: string;
+    boleto_url: string;
+    invoice_url: string;
+    status: string;
+}
+
+export async function generateBoleto(data: BoletoRequest): Promise<BoletoResponse> {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        throw new Error('Authentication token not found.');
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/payments/boleto`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            user_cpf: data.userCpf,
+            diagnostic_id: data.diagnosticId,
+            amount: data.amount,
+            description: data.description,
+        }),
+    });
+    return handleResponse(response);
+}

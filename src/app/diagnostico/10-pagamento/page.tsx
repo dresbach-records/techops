@@ -32,7 +32,7 @@ import type { Plan } from "@/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { getRecommendedPlan } from "@/lib/api";
+import { getRecommendedPlan, generateBoleto } from "@/lib/api";
 
 
 // Simple interest calculation for demonstration
@@ -282,8 +282,9 @@ export default function PaymentPage() {
 
     setIsLoading(method);
     try {
+        let loggedInUser = user;
         // If user is not logged in, sign them up first.
-        if (!user) {
+        if (!loggedInUser) {
             const { nome } = diagnosticData.pessoa;
             const { email } = diagnosticData.contato;
             const { senha } = diagnosticData.seguranca;
@@ -291,25 +292,48 @@ export default function PaymentPage() {
             if (!nome || !email || !senha) {
                 throw new Error("Nome, e-mail e senha são necessários para criar a conta.");
             }
-            await signUp(nome, email, senha);
+            loggedInUser = await signUp(nome, email, senha);
+        }
+
+        if (!loggedInUser) {
+            throw new Error("Falha ao obter informações do usuário após o login/cadastro.");
         }
         
-        // TODO: In the next step, we will create an endpoint in the Go backend
-        // to handle diagnostic submission and payment processing with Asaas.
-        // For now, we simulate success.
+        if (method === 'boleto') {
+            const result = await generateBoleto({
+                userCpf: diagnosticData.pessoa.cpf || "",
+                diagnosticId: crypto.randomUUID(),
+                amount: totalValue,
+                description: `Pagamento para o plano ${recommendedPlan.name}`,
+            });
 
-        console.log("Simulating payment for method:", method);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        toast({
-            title: "Processo finalizado com sucesso!",
-            description: method === 'card' 
-              ? "Seu painel personalizado está sendo preparado." 
-              : "Um boleto foi gerado. Você será notificado no seu painel.",
-        });
+            toast({
+                title: "Boleto Gerado!",
+                description: "Seu boleto está sendo aberto em uma nova aba.",
+            });
+            
+            window.open(result.boleto_url, '_blank', 'noopener,noreferrer');
+            
+            toast({
+                title: "Processo Finalizado",
+                description: "Você será redirecionado para o seu painel.",
+            });
 
-        resetData();
-        router.push('/dashboard');
+            resetData();
+            router.push('/dashboard');
+
+        } else { // 'card'
+            console.log("Simulating card payment...");
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            toast({
+                title: "Processo finalizado com sucesso!",
+                description: "Seu painel personalizado está sendo preparado.",
+            });
+
+            resetData();
+            router.push('/dashboard');
+        }
         
     } catch (error) {
         toast({

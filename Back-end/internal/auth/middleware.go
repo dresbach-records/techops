@@ -60,6 +60,8 @@ func AuthRequired() gin.HandlerFunc {
 
 			// Set user context, e.g., user ID and role
 			c.Set("userID", claims["sub"])
+			c.Set("userName", claims["name"])
+			c.Set("userEmail", claims["email"])
 			c.Set("userRole", claims["role"])
 			c.Next()
 		} else {
