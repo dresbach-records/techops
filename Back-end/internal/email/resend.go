@@ -1,19 +1,18 @@
 package email
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
+
+	"github.com/resend/resend-go/v3"
 )
 
 // ResendService is an implementation of EmailService using the Resend API.
 type ResendService struct {
-	apiKey string
+	client *resend.Client
 	from   string
+	apiKey string
 }
 
 // NewResendService creates a new instance of ResendService.
@@ -29,9 +28,12 @@ func NewResendService() (*ResendService, error) {
 		return nil, fmt.Errorf("EMAIL_FROM environment variable not set")
 	}
 
+	client := resend.NewClient(apiKey)
+
 	return &ResendService{
-		apiKey: apiKey,
+		client: client,
 		from:   from,
+		apiKey: apiKey,
 	}, nil
 }
 
@@ -49,41 +51,19 @@ func (r *ResendService) Send(to, subject, htmlBody string) error {
 		return nil // Don't return an error for simulation purposes
 	}
 
-	apiURL := "https://api.resend.com/emails"
-
-	payload := map[string]interface{}{
-		"from":    r.from,
-		"to":      []string{to},
-		"subject": subject,
-		"html":    htmlBody,
+	params := &resend.SendEmailRequest{
+		From:    r.from,
+		To:      []string{to},
+		Subject: subject,
+		Html:    htmlBody,
 	}
 
-	jsonPayload, err := json.Marshal(payload)
+	sent, err := r.client.Emails.Send(params)
 	if err != nil {
-		return fmt.Errorf("failed to marshal email payload: %w", err)
-	}
-
-	req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(jsonPayload))
-	if err != nil {
-		return fmt.Errorf("failed to create http request: %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+r.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to send email request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
 		// The caller should handle logging.
-		return fmt.Errorf("failed to send email, status: %s, response: %s", resp.Status, string(body))
+		return fmt.Errorf("failed to send email via Resend: %w", err)
 	}
 
-	log.Printf("Successfully sent email to %s via Resend.", to)
+	log.Printf("Successfully sent email to %s via Resend. ID: %s", to, sent.Id)
 	return nil
 }
