@@ -1,8 +1,12 @@
 package email
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -31,25 +35,55 @@ func NewResendService() (*ResendService, error) {
 	}, nil
 }
 
-// Send simulates sending an email using the Resend API.
-// In a real implementation, this would make an HTTP POST request to https://api.resend.com/emails
+// Send sends an email using the Resend API.
 func (r *ResendService) Send(to, subject, htmlBody string) error {
-	log.Printf("--- SIMULATING EMAIL (Resend) ---\n")
-	log.Printf("From: %s\n", r.from)
-	log.Printf("To: %s\n", to)
-	log.Printf("Subject: %s\n", subject)
-	log.Printf("Body: (HTML content not shown)\n")
-	log.Printf("---------------------------------\n")
-
+	// If API key is not set, simulate the email for development/testing.
 	if r.apiKey == "" || r.apiKey == "CHANGE_ME" {
+		log.Printf("--- SIMULATING EMAIL (Resend - API Key not configured) ---\n")
+		log.Printf("From: %s\n", r.from)
+		log.Printf("To: %s\n", to)
+		log.Printf("Subject: %s\n", subject)
+		log.Printf("Body: (HTML content not shown)\n")
+		log.Printf("---------------------------------\n")
 		log.Println("Email not sent because RESEND_API_KEY is not configured.")
-		// In a real app, you might want to return an error here
-		// but for simulation, we'll just log and proceed.
-		return nil
+		return nil // Don't return an error for simulation purposes
 	}
 
-	// Placeholder for the actual HTTP call to Resend API
-	// e.g., using net/http to POST to https://api.resend.com/emails
+	apiURL := "https://api.resend.com/emails"
 
+	payload := map[string]interface{}{
+		"from":    r.from,
+		"to":      []string{to},
+		"subject": subject,
+		"html":    htmlBody,
+	}
+
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal email payload: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return fmt.Errorf("failed to create http request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+r.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send email request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		// The caller should handle logging.
+		return fmt.Errorf("failed to send email, status: %s, response: %s", resp.Status, string(body))
+	}
+
+	log.Printf("Successfully sent email to %s via Resend.", to)
 	return nil
 }
