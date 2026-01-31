@@ -89,13 +89,11 @@ export default function PaymentPage() {
                 </Button>
             </div>
 
-            <Alert>
-                <CheckCircle className="h-4 w-4" />
-                <AlertTitle>Ambiente de Testes</AlertTitle>
-                <AlertDescription>
-                    Esta é uma simulação. Nenhum valor será cobrado.
-                </AlertDescription>
-            </Alert>
+            <div className="text-center text-sm">
+                <Link href="/extrato" className="underline text-muted-foreground hover:text-primary" target="_blank">
+                    Ver extrato detalhado da cobrança
+                </Link>
+            </div>
             
         </CardContent>
         <CardFooter className="flex items-center justify-center border-t bg-slate-50/50 p-4">
