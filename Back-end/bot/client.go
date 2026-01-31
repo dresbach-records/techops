@@ -17,15 +17,15 @@ type WhatsAppClient interface {
 
 // httpWhatsAppClient is the implementation of WhatsAppClient.
 type httpWhatsAppClient struct {
-	apiToken      string
+	whatsappToken string
 	phoneNumberID string
 	httpClient    *http.Client
 }
 
 // NewWhatsAppClient creates a new client for the WhatsApp Graph API.
-func NewWhatsAppClient(apiToken, phoneNumberID string) WhatsAppClient {
+func NewWhatsAppClient(whatsappToken, phoneNumberID string) WhatsAppClient {
 	return &httpWhatsAppClient{
-		apiToken:      apiToken,
+		whatsappToken: whatsappToken,
 		phoneNumberID: phoneNumberID,
 		httpClient:    &http.Client{},
 	}
@@ -33,7 +33,7 @@ func NewWhatsAppClient(apiToken, phoneNumberID string) WhatsAppClient {
 
 // SendTextMessage sends a plain text message to a user.
 func (c *httpWhatsAppClient) SendTextMessage(to, body string) error {
-	if c.apiToken == "" || c.phoneNumberID == "" {
+	if c.whatsappToken == "" || c.phoneNumberID == "" {
 		log.Println("WARNING: WhatsApp tokens not set. Simulating message sending.")
 		log.Printf("--- SIMULATING WHATSAPP MESSAGE ---\n")
 		log.Printf("To: %s\n", to)
@@ -41,7 +41,7 @@ func (c *httpWhatsAppClient) SendTextMessage(to, body string) error {
 		log.Printf("----------------------------------\n")
 		return nil // Simulate success if tokens are not set
 	}
-	
+
 	url := fmt.Sprintf("%s%s/messages", graphAPIURL, c.phoneNumberID)
 
 	requestBody := WhatsAppAPIRequest{
@@ -61,7 +61,7 @@ func (c *httpWhatsAppClient) SendTextMessage(to, body string) error {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+c.apiToken)
+	req.Header.Set("Authorization", "Bearer "+c.whatsappToken)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.httpClient.Do(req)
@@ -75,7 +75,7 @@ func (c *httpWhatsAppClient) SendTextMessage(to, body string) error {
 		json.NewDecoder(resp.Body).Decode(&errorResp)
 		return fmt.Errorf("whatsapp API returned status %d: %v", resp.StatusCode, errorResp)
 	}
-	
+
 	log.Printf("Successfully sent message to %s", to)
 	return nil
 }

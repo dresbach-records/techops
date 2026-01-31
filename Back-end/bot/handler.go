@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
-	"crypto/rand"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -34,6 +38,25 @@ func newRequestID() string {
 	return fmt.Sprintf("%x", b)
 }
 
+// validateSignature checks if the incoming webhook payload is genuinely from Meta.
+func validateSignature(signature string, body []byte, secret string) bool {
+	if !strings.HasPrefix(signature, "sha256=") {
+		return false
+	}
+
+	actualSignatureHex := strings.TrimPrefix(signature, "sha256=")
+	decodedSignature, err := hex.DecodeString(actualSignatureHex)
+	if err != nil {
+		logJSON(map[string]interface{}{"level": "error", "error": "could not decode signature hex", "details": err.Error()})
+		return false
+	}
+
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write(body)
+	expectedMAC := mac.Sum(nil)
+
+	return hmac.Equal(decodedSignature, expectedMAC)
+}
 
 // BotHandler handles incoming webhook requests.
 type BotHandler struct {
@@ -84,6 +107,48 @@ func (h *BotHandler) VerifyWebhook(c *gin.Context) {
 func (h *BotHandler) HandleWebhook(c *gin.Context) {
 	requestID := newRequestID()
 
+	// 1. Read the raw body for signature validation (mandatory for production)
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		logJSON(map[string]interface{}{
+			"level":      "error",
+			"request_id": requestID,
+			"error":      "failed to read webhook body",
+			"details":    err.Error(),
+		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
+		return
+	}
+
+	// 2. Validate the X-Hub-Signature-256 header to ensure the request is from Meta.
+	appSecret := os.Getenv("WHATSAPP_APP_SECRET")
+	if appSecret != "" {
+		signature := c.GetHeader("X-Hub-Signature-256")
+		if !validateSignature(signature, body, appSecret) {
+			logJSON(map[string]interface{}{
+				"level":         "error",
+				"request_id":    requestID,
+				"action":        "webhook_signature_validation",
+				"status":        "failed",
+				"client_ip":     c.ClientIP(),
+				"signature_hdr": signature,
+			})
+			c.JSON(http.StatusForbidden, gin.H{"error": "invalid signature"})
+			return
+		}
+	} else {
+		logJSON(map[string]interface{}{
+			"level":      "warning",
+			"request_id": requestID,
+			"action":     "webhook_signature_validation",
+			"status":     "skipped",
+			"reason":     "WHATSAPP_APP_SECRET is not set. Not safe for production.",
+		})
+	}
+
+	// 3. Restore the body so Gin can read it again.
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+
 	var payload WhatsAppWebhookPayload
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		logJSON(map[string]interface{}{
@@ -129,7 +194,7 @@ func (h *BotHandler) HandleWebhook(c *gin.Context) {
 
 			// Get current user state
 			currentState, sessionData := h.StateManager.GetState(userPhone)
-			
+
 			logJSON(map[string]interface{}{
 				"level":         "info",
 				"request_id":    requestID,
@@ -139,7 +204,6 @@ func (h *BotHandler) HandleWebhook(c *gin.Context) {
 				"action":        "message_received",
 				"message_body":  message.Text.Body,
 			})
-
 
 			// Process the message
 			response, nextState, nextSessionData := ProcessMessage(context.Background(), h.CoreClient, currentState, message, sessionData)
@@ -165,16 +229,16 @@ func (h *BotHandler) HandleWebhook(c *gin.Context) {
 			// Update state
 			if currentState != nextState {
 				logJSON(map[string]interface{}{
-					"level":        "info",
-					"request_id":   requestID,
-					"phone":        userPhone,
-					"action":       "state_transition",
-					"from_state":   currentState,
-					"to_state":     nextState,
+					"level":      "info",
+					"request_id": requestID,
+					"phone":      userPhone,
+					"action":     "state_transition",
+					"from_state": currentState,
+					"to_state":   nextState,
 				})
 			}
 			h.StateManager.SetState(userPhone, nextState, nextSessionData)
-			
+
 			// Mark as processed
 			if err := h.StateManager.MarkMessageAsProcessed(message.ID); err != nil {
 				logJSON(map[string]interface{}{"level": "error", "request_id": requestID, "phone": userPhone, "message_id": message.ID, "error": "failed to mark message as processed", "details": err.Error()})

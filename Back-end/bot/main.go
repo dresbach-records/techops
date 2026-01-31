@@ -52,7 +52,7 @@ func main() {
 		os.Getenv("CORE_API_KEY"),
 	)
 
-	whatsAppClient := NewWhatsAppClient(os.Getenv("WHATSAPP_GRAPH_API_TOKEN"), os.Getenv("WHATSAPP_PHONE_NUMBER_ID"))
+	whatsAppClient := NewWhatsAppClient(os.Getenv("WHATSAPP_TOKEN"), os.Getenv("WHATSAPP_PHONE_NUMBER_ID"))
 	botHandler := NewBotHandler(stateManager, whatsAppClient, coreClient) // Pass client to handler
 
 	router := gin.Default()
@@ -62,8 +62,8 @@ func main() {
 		healthStatus := gin.H{
 			"status": "ok",
 			"services": gin.H{
-				"database":   "ok",
-				"core_api":   "ok",
+				"database": "ok",
+				"core_api": "ok",
 			},
 		}
 		httpStatus := http.StatusOK
@@ -84,7 +84,7 @@ func main() {
 			healthStatus["services"].(gin.H)["core_api"] = "down"
 			httpStatus = http.StatusServiceUnavailable
 		}
-		
+
 		if httpStatus != http.StatusOK {
 			healthStatus["status"] = "degraded"
 		}
@@ -113,7 +113,6 @@ bot_core_api_latency_ms{quantile="0.9"} 250
 `
 		c.String(http.StatusOK, metrics)
 	})
-
 
 	// --- Webhook Endpoints ---
 	router.GET("/webhook", botHandler.VerifyWebhook)
