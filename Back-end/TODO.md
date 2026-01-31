@@ -1,281 +1,349 @@
-🧭 PAINEL DA EMPRESA — TECH LAB (INTERNO)
-regra tudo e componente deve estar e pasta coponenete imporados  e rodape e cabeçalho nao sao do site  so novos proprios e logim nao evai no site e acessado de /
-login-adm
-Este painel não é do cliente.
-É o painel da Tech Lab, usado pela equipe para operar, analisar, decidir e escalar.
+✅ TODO — BACKEND COMPLETO (GO) | TECH LAB
+0) Fundamentos do projeto
 
-🎯 OBJETIVO DO PAINEL INTERNO
+ Go ≥ 1.22
 
-Ver todos os clientes
+ Framework HTTP (Gin ou Fiber)
 
-Acompanhar diagnósticos
+ Padrão Clean Architecture / Hexagonal
 
-Controlar consultorias
+ Monorepo com backend-go/
 
-Auditar IA
+ .env carregado com validação obrigatória
 
-Controlar pagamentos
+ Logs estruturados (JSON)
 
-Operar Tech Ops
+ Versionamento de API (/v1)
 
-Garantir qualidade e segurança
+1) Bootstrap da API
 
-📁 ESTRUTURA DO PAINEL (VISÃO GERAL)
-Painel Tech Lab
-├─ Visão Geral
-├─ Clientes
-├─ Diagnósticos
-├─ Consultorias
-├─ Painéis dos Clientes
-├─ IA & Automação
-├─ Tech Ops
-├─ Financeiro
-├─ Conteúdo & Templates
-├─ Usuários Internos
-└─ Configurações
+Objetivo: subir a API com saúde, config e middlewares.
 
-1️⃣ VISÃO GERAL (DASHBOARD EXECUTIVO)
+ cmd/api/main.go
 
-O que mostra
+ Loader de config (internal/config)
 
-Clientes ativos
+ Middleware:
 
-Diagnósticos em andamento
+ CORS
 
-Pagamentos pendentes
+ Request ID
 
-Consultorias ativas
+ Logger
 
-Alertas críticos (IA / infra)
+ Rate limit
 
-Cards
+ Healthcheck
 
-“Novos diagnósticos hoje”
+ GET /health
 
-“Clientes aguardando consultoria”
+ GET /metrics (opcional)
 
-“IA com alerta”
+2) Autenticação e Autorização
 
-“Infra ok / atenção / risco”
+Objetivo: segurança total para cliente e admin.
 
-👉 É a primeira tela ao logar.
+ JWT (access + refresh)
 
-2️⃣ CLIENTES
+ Hash de senha (bcrypt/argon2)
+
+ RBAC (roles)
+
+ admin
+
+ consultor
+
+ techops
+
+ cliente
+
+ Middlewares:
+
+ AuthRequired
+
+ RoleRequired
+
+Endpoints
+
+ POST /auth/login
+
+ POST /auth/refresh
+
+ POST /auth/logout
+
+3) Usuários (internos e clientes)
+
+ Model users
+
+ PF / PJ
+
+ Status (ativo, bloqueado)
+
+ Vínculo com empresa/projeto
+
+Endpoints
+
+ GET /users/me
+
+ GET /admin/users
+
+ POST /admin/users
+
+ PATCH /admin/users/:id
+
+4) Onboarding por Diagnóstico (core do produto)
+
+Objetivo: substituir cadastro tradicional.
+
+ Persistência por etapas (card a card)
+
+ Salvamento automático
+
+ Validação progressiva
+
+ Retomada do fluxo
+
+Modelos
+
+ diagnosticos
+
+ diagnostico_steps
+
+Endpoints
+
+ POST /diagnostico/start
+
+ PATCH /diagnostico/step/:step
+
+ GET /diagnostico/status
+
+ POST /diagnostico/finish
+
+5) Pagamentos (gate de liberação)
+
+Objetivo: nada libera sem pagamento.
+
+ Integração (Asaas / Stripe / Pix)
+
+ Webhook seguro
+
+ Estados: pendente, pago, falhou
+
+Modelos
+
+ pagamentos
+
+Endpoints
+
+ POST /pagamentos/create
+
+ POST /webhooks/pagamentos
+
+ GET /pagamentos/status
+
+6) Integração com IA (Python)
+
+Objetivo: IA apoia decisões, não manda.
+
+ Client HTTP seguro para IA
+
+ Timeout e retry
+
+ Logs de decisão
+
+Fluxo
+
+Diagnóstico pago
+ → Backend chama IA
+ → IA retorna JSON estruturado
+ → Backend valida
+ → Painel é criado
+
+
+Endpoints internos
+
+ POST /internal/ia/analisar-diagnostico
+
+7) Painel do Cliente (dinâmico)
+
+Objetivo: painel gerado conforme diagnóstico.
+
+ Builder de painel
+
+ Módulos dinâmicos
+
+ Permissões por módulo
+
+Modelos
+
+ paineis
+
+ painel_modulos
+
+Endpoints
+
+ GET /cliente/painel
+
+ GET /cliente/painel/modulos
+
+8) Painel Admin (empresa)
+
+Objetivo: operar a Tech Lab.
+
 Clientes
-├─ Lista geral
-├─ Perfil do cliente
-└─ Histórico completo
 
-Cada cliente tem:
+ GET /admin/clientes
 
-Dados cadastrais
+ GET /admin/clientes/:id
 
-Status (diagnóstico / pago / ativo / pausado)
-
-Tipo (PF / PJ)
-
-Painel gerado
-
-Histórico de interações
-
-Consultor responsável
-
-3️⃣ DIAGNÓSTICOS
 Diagnósticos
-├─ Novos
-├─ Em análise
-├─ Concluídos
-└─ Arquivados
 
-Tela de diagnóstico
+ GET /admin/diagnosticos
 
-Respostas do questionário
+ PATCH /admin/diagnosticos/:id/aprovar
 
-Classificação da IA
-
-Sugestão de módulos
-
-Observações da IA
-
-Campo de ajuste humano
-
-Botão: Aprovar painel
-
-👉 Nada vai para o cliente sem validação humana.
-
-4️⃣ CONSULTORIAS
 Consultorias
-├─ Ativas
-├─ Agendadas
-├─ Concluídas
 
+ GET /admin/consultorias
 
-Cada consultoria tem:
+ POST /admin/consultorias/notas
 
-Cliente
+Painéis
 
-Escopo
+ Ativar / desativar módulos
 
-Consultor
+ Ajustar roadmap
 
-Anotações internas
+9) WhatsApp Bot (por projeto)
 
-Decisões tomadas
+Objetivo: bot faz parte do projeto do cliente.
 
-Próximos passos
+Configuração segura
 
-5️⃣ PAINÉIS DOS CLIENTES (CONTROLE TOTAL)
+ Salvar App ID, Business ID, Phone ID
 
-Aqui a empresa vê exatamente o que o cliente vê.
+ Nunca exibir secrets
 
-Funções:
+ Rotação de tokens
 
-Ver módulos liberados
+Modelos
 
-Ativar / desativar módulos
+ whatsapp_projects
 
-Ajustar roadmap
+ whatsapp_logs
 
-Inserir documentos
+Endpoints
 
-Enviar orientações técnicas
+ POST /admin/projetos/:id/whatsapp/config
 
-👉 Controle absoluto, sem gambiarra.
+ GET /admin/projetos/:id/whatsapp/status
 
-6️⃣ IA & AUTOMAÇÃO
-IA
-├─ Diagnósticos gerados
-├─ Logs de decisão
-├─ Ajustes de prompt
-├─ Guardrails
-└─ Alertas
+ POST /webhooks/whatsapp
 
-O que é possível:
+10) Repositórios (GitHub)
 
-Ver resposta bruta da IA
+Objetivo: análise técnica de código.
 
-Comparar IA × decisão humana
+ Validar URL
 
-Ajustar regras
+ Conectar GitHub (read-only)
 
-Bloquear sugestões erradas
+ Registrar análise
 
-Evoluir o modelo
+Endpoints
 
-👉 IA auditável, não caixa preta.
+ POST /repositorios/analisar
 
-7️⃣ TECH OPS (CRÍTICO)
-Tech Ops
-├─ Infraestrutura
-├─ Monitoramento
-├─ Custos
-├─ Logs
-└─ Alertas
+ GET /repositorios/:id
 
-Funções
+11) Tech Ops (operação real)
 
-Status de serviços (frontend, backend, IA)
+Objetivo: manter tudo vivo e barato.
 
-Consumo de IA por cliente
+ Logs centralizados
 
-Erros e incidentes
+ Métricas (requests, erros)
 
-Backups
+ Custos de IA por cliente
 
-SLA interno
+ Alertas básicos
 
-👉 Aqui se evita desastre.
+Endpoints
 
-8️⃣ FINANCEIRO
-Financeiro
-├─ Pagamentos
-├─ Faturas
-├─ Métodos
-└─ Relatórios
+ GET /admin/techops/health
 
+ GET /admin/techops/metrics
 
-Mostra:
+12) Banco de Dados & Migrações
 
-Quem pagou
+ Postgres
 
-Quem não pagou
+ Migrações versionadas
 
-Forma de pagamento
+ Índices corretos
 
-Receita por período
+Tabelas mínimas
 
-Clientes inadimplentes
+users
 
-9️⃣ CONTEÚDO & TEMPLATES
+diagnosticos
 
-Usado para escalar consultoria.
+pagamentos
 
-Templates de diagnóstico
+paineis
 
-Templates de roadmap
+painel_modulos
 
-Checklists técnicos
+whatsapp_projects
 
-Documentos padrão
+whatsapp_logs
 
-Boas práticas
+consultorias
 
-🔟 USUÁRIOS INTERNOS
-Usuários
-├─ Admin
-├─ Consultores
-└─ Tech Ops
+13) Segurança (obrigatório)
 
+ Secrets só no .env
 
-Cada perfil tem:
+ Webhooks com assinatura
 
-Permissões específicas
+ Rate limit por IP/usuário
 
-Acesso limitado
+ Auditoria de ações admin
 
-Logs de ação
+14) Testes
 
-1️⃣1️⃣ CONFIGURAÇÕES
+ Unitários (services)
 
-Regras da IA
+ Integração (handlers)
 
-Limites de uso
+ Teste de webhook
 
-Planos
+ Teste de RBAC
 
-Textos institucionais
+15) Deploy & Produção
 
-Integrações externas
+ Dockerfile
 
-🔐 SEGURANÇA DO PAINEL INTERNO
+ docker-compose
 
-Login separado do cliente
+ Nginx / Proxy
 
-MFA (recomendado)
+ Variáveis por ambiente
 
-Logs de acesso
+ Backup automático
 
-Auditoria de ações
+🎯 RESULTADO FINAL
 
-Controle de permissão por módulo
+Quando esse TODO estiver completo, você terá:
 
-🔁 FLUXO OPERACIONAL REAL
-Cliente entra →
-Diagnóstico →
-IA sugere →
-Empresa valida →
-Painel liberado →
-Consultoria ocorre →
-Tech Ops monitora →
-Financeiro acompanha
+Backend robusto
 
-🎯 O QUE ESSE PAINEL FAZ
+Produto vendável
 
-✔ Organiza a empresa
-✔ Escala a consultoria
-✔ Controla a IA
-✔ Protege a operação
-✔ Evita erro humano
-✔ Dá visão de negócio
+IA controlada
 
-Isso é plataforma de verdade, não “painel admin genérico”.
+WhatsApp Bot seguro
+
+Painéis dinâmicos
+
+Operação profissional
