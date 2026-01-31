@@ -49,29 +49,33 @@ function AdminSidebarNav() {
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="min-h-screen bg-background">
-            <header className="fixed top-0 left-0 right-0 flex h-16 shrink-0 items-center justify-between border-b bg-background px-6 z-50">
-                <div className="flex items-center gap-4">
-                     <Sheet>
-                        <SheetTrigger asChild>
-                            <Button variant="outline" size="icon" className="shrink-0 md:hidden">
-                                <Menu className="h-5 w-5" />
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="left" className="flex flex-col p-0 w-64 bg-muted/40">
-                           <div className="flex h-16 shrink-0 items-center border-b px-6">
-                                <Link href="/admin">
-                                    <Image src="/logotech.png" alt="Tech Lab Logo" width={32} height={32} className="h-8 w-auto" />
-                                </Link>
-                            </div>
-                           <div className="flex-1 overflow-y-auto py-4">
-                                <AdminSidebarNav />
-                           </div>
-                        </SheetContent>
-                    </Sheet>
+        <div className="relative min-h-screen">
+            {/* Header */}
+            <header className="fixed top-0 left-0 right-0 flex h-16 items-center justify-between border-b bg-white px-6 z-30">
+                 <div className="flex items-center gap-4">
                     <Link href="/admin" className="flex items-center gap-2 font-semibold">
                         <Image src="/logotech.png" alt="Tech Lab Logo" width={36} height={36} className="h-9 w-auto" />
                     </Link>
+                    <div className="md:hidden">
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="outline" size="icon" className="shrink-0">
+                                    <Menu className="h-5 w-5" />
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="left" className="flex flex-col p-0 w-64 bg-white">
+                               <div className="flex h-16 shrink-0 items-center border-b px-6">
+                                    <Link href="/admin" className="flex items-center gap-2 font-semibold">
+                                        <Image src="/logotech.png" alt="Tech Lab Logo" width={32} height={32} className="h-8 w-auto" />
+                                        <span className="font-headline text-lg">Tech Lab</span>
+                                    </Link>
+                                </div>
+                               <div className="flex-1 overflow-y-auto py-4">
+                                    <AdminSidebarNav />
+                               </div>
+                            </SheetContent>
+                        </Sheet>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -85,20 +89,25 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
                 </div>
             </header>
             
-            <aside className="fixed top-16 bottom-0 left-0 z-40 hidden w-60 flex-col border-r bg-muted/40 md:flex">
-                <div className="flex-1 overflow-y-auto py-4">
+            {/* Sidebar */}
+            <aside className="fixed top-16 bottom-12 left-0 z-20 hidden w-60 flex-col border-r bg-white md:flex">
+                 <div className="h-full overflow-y-auto py-4">
                     <AdminSidebarNav />
                 </div>
             </aside>
             
-            <main className="md:pl-60 pt-16 pb-12">
-                <div className="p-6 bg-gray-50/50">
-                    {children}
-                </div>
-            </main>
+            {/* Main Content */}
+            <div className="md:pl-60">
+                 <main className="pt-16 pb-12">
+                     <div className="p-6 bg-gray-50/50 min-h-[calc(100vh-8rem)]">
+                        {children}
+                    </div>
+                </main>
+            </div>
 
-            <footer className="fixed bottom-0 left-0 right-0 flex h-12 items-center justify-center border-t bg-background text-center text-sm text-muted-foreground z-50">
-                TECH LAB © 2026
+            {/* Footer */}
+            <footer className="fixed bottom-0 left-0 right-0 flex h-12 items-center justify-center border-t bg-white z-30">
+                 <p className="text-center text-sm text-muted-foreground">TECH LAB © 2026</p>
             </footer>
         </div>
     );

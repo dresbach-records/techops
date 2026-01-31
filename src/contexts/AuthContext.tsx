@@ -18,7 +18,7 @@ interface AuthContextType {
   isPaid: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signUp: (diagnosticData: DiagnosticData) => Promise<void>;
+  signUp: (diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto') => Promise<void>;
   logout: () => void;
 }
 
@@ -39,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: session.user.email!,
           name: session.user.user_metadata?.name || "Usuário",
           isPaid: session.user.user_metadata?.isPaid || false,
+          payment_pending_boleto: session.user.user_metadata?.payment_pending_boleto || false,
         };
         setUser(appUser);
         if (appUser.isPaid) {
@@ -63,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // O onAuthStateChange cuidará do redirecionamento
   };
 
-  const signUp = async (diagnosticData: DiagnosticData) => {
+  const signUp = async (diagnosticData: DiagnosticData, paymentMethod: 'card' | 'boleto') => {
     const email = diagnosticData.contato?.email;
     const password = diagnosticData.seguranca?.senha;
     const name = diagnosticData.pessoa?.nome;
@@ -78,7 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: {
         data: {
           name: name,
-          isPaid: true, // Pagamento é simulado e acesso liberado
+          isPaid: true, // Libera acesso ao dashboard em ambos os casos
+          payment_pending_boleto: paymentMethod === 'boleto',
         },
       },
     });
@@ -108,13 +110,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/");
   };
   
-  // Função dummy para compatibilidade, o fluxo mudou.
-  const setPaymentSuccess = () => {
-     if (user) {
-        supabase.auth.updateUser({ data: { isPaid: true } });
-     }
-  };
-
   const isAuthenticated = !!user;
   const isPaid = user?.isPaid || false;
 
