@@ -56,7 +56,7 @@ func (s *service) Register(nome, email, password string) (*LoginResponse, error)
 		PasswordHash: hashedPassword,
 		Role:         "cliente",            // Default role
 		Status:       "pagamento_pendente", // Default status
-		Flow:         "diagnostico",        // Default flow
+		FlowStep:     "diagnostico",        // Default flow
 	}
 
 	savedUser, err := s.userRepo.Save(user)

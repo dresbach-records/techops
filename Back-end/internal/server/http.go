@@ -68,7 +68,7 @@ func NewServer(db *sql.DB) *gin.Engine {
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{frontendURL},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Request-ID"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Request-ID", "Asaas-Webhook-Token"},
 		ExposeHeaders:    []string{"Content-Length", "X-Request-ID"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
@@ -114,15 +114,19 @@ func NewServer(db *sql.DB) *gin.Engine {
 	router.GET("/webhooks/whatsapp", whatsapp.VerifyWebhook)
 	router.POST("/webhooks/whatsapp", rateLimiter, whatsapp.ReceiveWebhook)
 
-	// Initialize services
+	// Initialize repositories
 	userRepo := users.NewRepository(db)
+	pagamentoRepo := pagamento.NewRepository(db)
+	painelRepo := painel.NewRepository(db)
+
+	// Initialize services
 	authSvc, err := auth.NewService(userRepo)
 	if err != nil {
 		log.Fatalf("FATAL: Could not initialize auth service: %v", err)
 	}
-	painelSvc := painel.NewService()
+	painelSvc := painel.NewService(painelRepo, userRepo)
 	diagSvc := diagnostico.NewService()
-	pagamentoSvc := pagamento.NewService()
+	pagamentoSvc := pagamento.NewService(pagamentoRepo, userRepo)
 
 	// Initialize handlers
 	authHandler := auth.NewHandler(authSvc)
@@ -142,7 +146,7 @@ func NewServer(db *sql.DB) *gin.Engine {
 		}
 
 		// Public webhook routes
-		v1.POST("/webhooks/asaas/payment", rateLimiter, pagamento.AsaasWebhookHandler())
+		v1.POST("/webhooks/asaas/payment", rateLimiter, pagamentoHandler.AsaasWebhookHandler)
 
 		// Authenticated routes
 		api := v1.Group("/")

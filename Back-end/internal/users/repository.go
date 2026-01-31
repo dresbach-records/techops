@@ -10,6 +10,7 @@ type Repository interface {
 	Save(user User) (*User, error)
 	FindByEmail(email string) (*User, error)
 	FindByID(id string) (*User, error)
+	UpdateStatusAndFlow(userID string, status string, flow string) error
 }
 
 type repository struct {
@@ -35,7 +36,7 @@ func (r *repository) Save(user User) (*User, error) {
 		user.PasswordHash,
 		user.Role,
 		user.Status,
-		user.Flow,
+		user.FlowStep,
 	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("could not save user: %w", err)
@@ -58,7 +59,7 @@ func (r *repository) FindByEmail(email string) (*User, error) {
 		&user.PasswordHash,
 		&user.Role,
 		&user.Status,
-		&user.Flow,
+		&user.FlowStep,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -86,7 +87,7 @@ func (r *repository) FindByID(id string) (*User, error) {
 		&user.PasswordHash,
 		&user.Role,
 		&user.Status,
-		&user.Flow,
+		&user.FlowStep,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -97,4 +98,28 @@ func (r *repository) FindByID(id string) (*User, error) {
 		return nil, fmt.Errorf("could not find user by id: %w", err)
 	}
 	return &user, nil
+}
+
+// UpdateStatusAndFlow updates a user's status and flow step.
+// This is critical for unlocking features after payment.
+func (r *repository) UpdateStatusAndFlow(userID string, status string, flow string) error {
+	query := `
+		UPDATE users
+		SET status = $2, flow_step = $3, updated_at = now()
+		WHERE id = $1
+	`
+	result, err := r.db.Exec(query, userID, status, flow)
+	if err != nil {
+		return fmt.Errorf("could not update user status and flow: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("could not get affected rows: %w", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("user with ID %s not found for update", userID)
+	}
+
+	return nil
 }

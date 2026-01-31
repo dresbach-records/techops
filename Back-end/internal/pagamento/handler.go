@@ -1,7 +1,6 @@
 package pagamento
 
 import (
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -28,10 +27,13 @@ func (h *Handler) CreatePaymentHandler(c *gin.Context) {
 	}
 
 	userID, _ := c.Get("userID")
-	// In a real scenario, you'd also fetch user details from the DB
-	// and the specific plan/amount to be charged.
 
-	paymentResponse, err := h.service.CreatePayment(userID.(string), req)
+	// In a real scenario, you'd fetch the user's diagnosed plan to get the correct value.
+	// For now, we pass a placeholder plan code.
+	const placeholderPlanoCodigo = "BUILD"
+	const placeholderValor = 2997.00
+
+	paymentResponse, err := h.service.CreatePayment(userID.(string), req, placeholderPlanoCodigo, placeholderValor)
 	if err != nil {
 		log.Printf("ERROR: failed to create payment: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create payment"})
@@ -42,31 +44,40 @@ func (h *Handler) CreatePaymentHandler(c *gin.Context) {
 }
 
 // AsaasWebhookHandler handles incoming payment status updates from Asaas.
-func AsaasWebhookHandler() gin.HandlerFunc {
+func (h *Handler) AsaasWebhookHandler(c *gin.Context) {
 	webhookToken := os.Getenv("ASAAS_WEBHOOK_TOKEN")
 	if webhookToken == "" {
 		log.Println("WARNING: ASAAS_WEBHOOK_TOKEN is not set. Webhook security is disabled.")
 	}
 
-	return func(c *gin.Context) {
-		receivedToken := c.GetHeader("asaas-webhook-token")
-		if webhookToken != "" && webhookToken != "seu_token_aqui" && receivedToken != webhookToken {
-			log.Printf("WARNING: Invalid Asaas webhook token received. IP: %s, Token: '%s'", c.ClientIP(), receivedToken)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid webhook token"})
-			return
-		}
-
-		body, err := ioutil.ReadAll(c.Request.Body)
-		if err != nil {
-			log.Printf("ERROR: Failed to read Asaas webhook body: %v", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
-			return
-		}
-
-		log.Printf("INFO: Received Asaas Webhook: %s", string(body))
-		// TODO: Implement webhook processing logic here.
-		// - Parse JSON, find payment, update status, unlock features.
-
-		c.Status(http.StatusOK)
+	// Validate webhook token
+	receivedToken := c.GetHeader("asaas-webhook-token")
+	if webhookToken != "" && webhookToken != "seu_token_aqui" && receivedToken != webhookToken {
+		log.Printf("WARNING: Invalid Asaas webhook token received. IP: %s, Token: '%s'", c.ClientIP(), receivedToken)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid webhook token"})
+		return
 	}
+
+	// Bind the JSON payload
+	var payload AsaasWebhookPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		log.Printf("ERROR: Failed to read Asaas webhook body: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
+		return
+	}
+
+	log.Printf("INFO: Received Asaas Webhook Event '%s' for payment '%s'", payload.Event, payload.Payment.ID)
+
+	// Process the webhook in the service layer
+	err := h.service.ProcessAsaasWebhook(payload)
+	if err != nil {
+		log.Printf("ERROR: Failed to process Asaas webhook: %v", err)
+		// We return 200 OK to Asaas to prevent retries for business logic errors.
+		// Errors should be monitored and handled internally.
+		c.Status(http.StatusOK)
+		return
+	}
+
+	log.Printf("INFO: Webhook for payment '%s' processed successfully.", payload.Payment.ID)
+	c.Status(http.StatusOK)
 }

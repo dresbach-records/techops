@@ -43,7 +43,7 @@ func (h *Handler) GetMe(c *gin.Context) {
 		Email:  user.Email,
 		Role:   user.Role,
 		Status: user.Status,
-		Flow:   user.Flow,
+		Flow:   user.FlowStep, // Map internal DB field name to public contract name
 	}
 
 	c.JSON(http.StatusOK, response)

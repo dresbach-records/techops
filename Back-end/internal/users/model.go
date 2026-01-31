@@ -13,7 +13,7 @@ type User struct {
 	PasswordHash string    `json:"-"`
 	Role         string    `json:"role"`
 	Status       string    `json:"status"`
-	Flow         string    `json:"flow"` // DB column is 'flow_step'
+	FlowStep     string    `json:"flow_step"` // DB column is 'flow_step'
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
