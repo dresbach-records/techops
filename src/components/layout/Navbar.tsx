@@ -12,7 +12,7 @@ const navLinks = [
   { href: "/como-funciona", label: "Como Funciona" },
   { href: "/planos", label: "Planos" },
   { href: "#consultoria", label: "Consultoria" },
-  { href: "#tech-ops", label: "Tech Ops" },
+  { href: "#tech-lab", label: "Tech Lab" },
 ];
 
 export function Navbar() {
@@ -23,13 +23,13 @@ export function Navbar() {
       <div className="container flex h-24 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logotech.png" alt="Tech Lab Logo" width={500} height={500} className="h-20 w-20" />
+            <Image src="/logotech.png" alt="Tech Lab Logo" width={500} height={500} className="size-20" />
           </Link>
         </div>
         <nav className="hidden items-center space-x-6 text-sm font-medium md:flex flex-1 justify-center">
           {navLinks.map((link) => (
             <Link
-              key={link.href}
+              key={link.label}
               href={link.href}
               className="transition-colors hover:text-foreground/80 text-foreground/60"
             >
@@ -69,11 +69,11 @@ export function Navbar() {
             <SheetContent side="left">
               <div className="flex flex-col space-y-4 p-4">
                 <Link href="/" className="flex items-center gap-2 mb-4">
-                     <Image src="/logotech.png" alt="Tech Lab Logo" width={500} height={500} className="h-20 w-20" />
+                     <Image src="/logotech.png" alt="Tech Lab Logo" width={500} height={500} className="size-20" />
                 </Link>
                 {navLinks.map((link) => (
                     <Link
-                    key={link.href}
+                    key={link.label}
                     href={link.href}
                     className="text-lg font-medium"
                     >

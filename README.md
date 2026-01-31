@@ -2,7 +2,7 @@ Tech Lab
 
 Plataforma SaaS voltada à consultoria técnica personalizada, onde clientes passam por um diagnóstico estruturado, realizam o pagamento e recebem uma área do cliente e painel personalizados, gerados conforme suas necessidades de negócio, tecnologia e maturidade técnica.
 
-O sistema foi projetado com arquitetura de engenharia, foco em escalabilidade, segurança e operação profissional (Tech Ops).
+O sistema foi projetado com arquitetura de engenharia, foco em escalabilidade, segurança e operação profissional (Tech Lab).
 
 🎯 Objetivo do Projeto
 
@@ -54,7 +54,7 @@ Backend: regras de negócio, segurança, pagamento, permissões
 
 IA: análise de questionário, geração de painel, apoio à consultoria
 
-Tech Ops: operação, confiabilidade, custo e escala
+Tech Lab: operação, confiabilidade, custo e escala
 
 🖥️ Frontend (Next.js)
 Stack
@@ -217,7 +217,7 @@ Arquitetura
 
 IA / automação
 
-Tech Ops
+Tech Lab
 
 Documentos
 
@@ -225,9 +225,9 @@ Suporte
 
 O painel é gerado dinamicamente.
 
-🛠️ Tech Ops (Essencial)
+🛠️ Tech Lab (Essencial)
 
-Tech Ops garante que o sistema:
+Tech Lab garante que o sistema:
 
 Fique no ar
 

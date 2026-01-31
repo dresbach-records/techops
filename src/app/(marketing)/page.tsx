@@ -17,7 +17,7 @@ const features = [
   },
   {
     icon: <Network className="h-8 w-8 text-primary" />,
-    title: "Tech Ops e Escala",
+    title: "Tech Lab e Escala",
     description: "Sistemas seguros, eficientes e confiáveis.",
   },
 ];
@@ -51,7 +51,7 @@ export default function HomePage() {
                 Soluções técnicas inovadoras para sua empresa.
             </h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-                Consultoria técnica personalizada em software, sistemas, IA e Tech Ops.
+                Consultoria técnica personalizada em software, sistemas, IA e Tech Lab.
             </p>
             <div className="mt-8 flex justify-center gap-4">
                 <Button size="lg" asChild>
@@ -70,8 +70,8 @@ export default function HomePage() {
       <section className="py-20 md:py-24 bg-card">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid gap-8 md:grid-cols-3">
-            {features.map((feature) => (
-              <Card key={feature.title} className="flex flex-col items-start text-left p-6 border-none shadow-none bg-transparent">
+            {features.map((feature, index) => (
+              <Card key={index} className="flex flex-col items-start text-left p-6 border-none shadow-none bg-transparent">
                 <div className="mb-4">{feature.icon}</div>
                 <CardTitle className="mb-2 font-headline text-xl">{feature.title}</CardTitle>
                 <p className="text-muted-foreground">{feature.description}</p>
@@ -124,8 +124,8 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="bg-background rounded-lg p-8">
-              <p className="text-xl font-medium">Sem Tech Ops, sistemas viram risco.</p>
-              <p className="text-xl font-medium mt-2">Com Tech Ops, viram produtos confiáveis.</p>
+              <p className="text-xl font-medium">Sem Tech Lab, sistemas viram risco.</p>
+              <p className="text-xl font-medium mt-2">Com Tech Lab, viram produtos confiáveis.</p>
             </div>
           </div>
         </div>
