@@ -43,8 +43,8 @@ function ClientSidebarNav() {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { user } = useAuth();
     return (
-        <div className="flex h-screen w-full flex-col bg-background">
-            <header className="flex h-16 shrink-0 items-center justify-between border-b bg-background px-6">
+        <div className="min-h-screen bg-background">
+            <header className="fixed top-0 left-0 right-0 flex h-16 shrink-0 items-center justify-between border-b bg-background px-6 z-50">
                  <div className="flex items-center gap-4">
                     <Sheet>
                         <SheetTrigger asChild>
@@ -57,10 +57,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <span className="sr-only">Toggle navigation menu</span>
                             </Button>
                         </SheetTrigger>
-                         <SheetContent side="left" className="flex flex-col p-0 w-64">
+                         <SheetContent side="left" className="flex flex-col p-0 w-64 bg-muted/40">
                             <div className="flex h-16 shrink-0 items-center border-b px-6">
                                 <Link href="/">
-                                    <Image src="/logotech.png" alt="Tech Lab Logo" width={36} height={36} className="h-9 w-auto" />
+                                    <Image src="/logotech.png" alt="Tech Lab Logo" width={32} height={32} className="h-8 w-auto" />
                                 </Link>
                             </div>
                            <div className="flex-1 overflow-y-auto py-4">
@@ -81,21 +81,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <UserNav />
                 </div>
             </header>
-            <div className="flex flex-1 overflow-hidden">
-                <aside className="hidden w-60 flex-col border-r bg-muted/40 md:flex">
-                     <div className="flex-1 overflow-y-auto py-4">
-                        <ClientSidebarNav />
-                    </div>
-                </aside>
-                <div className="flex flex-1 flex-col overflow-y-auto">
-                    <main className="flex-grow p-6 bg-gray-50/50">
-                        {children}
-                    </main>
-                    <footer className="flex h-12 shrink-0 items-center justify-center border-t bg-background p-4 text-center text-sm text-muted-foreground">
-                        TECH LAB © 2026
-                    </footer>
+            
+            <aside className="fixed top-16 bottom-0 left-0 z-40 hidden w-60 flex-col border-r bg-muted/40 md:flex">
+                <div className="flex-1 overflow-y-auto py-4">
+                    <ClientSidebarNav />
                 </div>
-            </div>
+            </aside>
+            
+            <main className="md:pl-60 pt-16 pb-12">
+                <div className="p-6 bg-gray-50/50">
+                    {children}
+                </div>
+            </main>
+
+            <footer className="fixed bottom-0 left-0 right-0 flex h-12 items-center justify-center border-t bg-background text-center text-sm text-muted-foreground z-50">
+                TECH LAB © 2026
+            </footer>
         </div>
     );
 }
