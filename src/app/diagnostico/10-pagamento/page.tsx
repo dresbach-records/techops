@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const invoiceItems = [
   {
@@ -124,6 +125,84 @@ function ExtratoDialogContent() {
     );
 }
 
+function TermsOfServiceModal() {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button className="underline hover:text-primary">Termos de Serviço</button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-3xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-headline">Termos de Serviço – TECH LAB</DialogTitle>
+          <DialogDescription>
+            Ao utilizar nossos serviços, você concorda com estes Termos de Serviço.
+          </DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="max-h-[60vh] p-4 border rounded-md">
+            <div className="space-y-6 text-muted-foreground">
+              <p>
+                Bem-vindo à TECH LAB. Ao utilizar nossos serviços, você concorda com estes Termos de Serviço. Por favor, leia-os com atenção.
+              </p>
+
+              <section className="space-y-2">
+                <h2 className="text-lg font-headline font-semibold text-foreground">1. Nossos Serviços</h2>
+                <p>
+                  A TECH LAB oferece serviços de consultoria técnica personalizada, incluindo diagnósticos, roadmaps e suporte especializado. Nossos serviços são projetados para ajudar sua empresa a tomar as melhores decisões tecnológicas.
+                </p>
+              </section>
+
+              <section className="space-y-2">
+                <h2 className="text-lg font-headline font-semibold text-foreground">2. Uso dos Serviços</h2>
+                <p>
+                  Você concorda em usar nossos serviços apenas para fins lícitos e de acordo com estes termos. Você é responsável por manter a confidencialidade de sua conta e senha.
+                </p>
+              </section>
+
+              <section className="space-y-2">
+                <h2 className="text-lg font-headline font-semibold text-foreground">3. Pagamentos</h2>
+                <p>
+                  O acesso a certas funcionalidades e serviços requer pagamento. Todos os pagamentos são finais e não reembolsáveis, exceto conforme exigido por lei ou especificado em seu contrato de serviço.
+                </p>
+              </section>
+
+              <section className="space-y-2">
+                <h2 className="text-lg font-headline font-semibold text-foreground">4. Propriedade Intelectual</h2>
+                <p>
+                  Todo o conteúdo e materiais fornecidos como parte dos serviços são de propriedade da TECH LAB ou de seus licenciadores. Você pode usar esses materiais para fins internos de negócios, mas não pode redistribuí-los ou revendê-los.
+                </p>
+              </section>
+
+              <section className="space-y-2">
+                <h2 className="text-lg font-headline font-semibold text-foreground">5. Limitação de Responsabilidade</h2>
+                <p>
+                  Nossos serviços são fornecidos "como estão". A TECH LAB não oferece garantias de qualquer tipo e não será responsável por quaisquer danos diretos ou indiretos resultantes do uso de nossos serviços.
+                </p>
+              </section>
+
+              <section className="space-y-2">
+                <h2 className="text-lg font-headline font-semibold text-foreground">6. Alterações nos Termos</h2>
+                <p>
+                  Podemos modificar estes termos a qualquer momento. Notificaremos você sobre quaisquer alterações, e seu uso continuado dos serviços após as alterações constitui sua aceitação dos novos termos.
+                </p>
+              </section>
+
+              <section className="space-y-2">
+                <h2 className="text-lg font-headline font-semibold text-foreground">7. Contato</h2>
+                <p>
+                  Em caso de dúvidas sobre estes Termos de Serviço, entre em contato:
+                </p>
+                <p>
+                  <strong>TECH LAB – Consultoria Técnica</strong><br />
+                  📧 contato@techlab.com.br
+                </p>
+              </section>
+            </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 export default function PaymentPage() {
   const router = useRouter();
@@ -201,7 +280,7 @@ export default function PaymentPage() {
 
             <div className="text-center text-xs text-muted-foreground px-4">
                 Ao clicar em uma das opções de pagamento, você cria sua conta, concorda com
-                nossos <Link href="/termos-de-servico" className="underline hover:text-primary" target="_blank">Termos de Serviço</Link> e
+                nossos <TermsOfServiceModal /> e
                 assina o contrato de prestação de serviços que será enviado para seu e-mail.
             </div>
 
