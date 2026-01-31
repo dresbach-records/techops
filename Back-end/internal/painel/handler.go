@@ -24,16 +24,16 @@ func (h *Handler) GetDashboard(c *gin.Context) {
 		return
 	}
 
-	// For now, we get the name from the JWT claim for the welcome message
 	userName, _ := c.Get("userName")
 	if userName == nil {
 		userName = "Usuário" // Fallback
 	}
 
-	// The user ID is passed for future use (e.g., fetching user-specific data).
 	dashboardData, err := BuildForUser(userID.(string), userName.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to build dashboard"})
+		// Handle access denied error from the builder.
+		// This enforces the "gate" for dashboard access.
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
 	}
 
