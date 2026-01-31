@@ -35,28 +35,46 @@ func ProcessMessage(ctx context.Context, coreClient core.CoreClient, currentStat
 		sessionData.LastFeedbackFlow = "diagnostico"
 		return getDiagnosisQuestion(), StateDiagnostico, sessionData // Simple, one-step diagnosis for now
 
-	// --- Fluxo de Acompanhamento de Projeto (Sprint 2) ---
+	// --- Fluxo de Acompanhamento de Projeto (Sprint 3 - Real) ---
 	case StateAcompanhamentoAskEmail:
-		// User input is the email.
 		email := userInput
 
 		// REAL API CALL to the core backend to get the user's status.
 		status, err := coreClient.GetProjectStatusByEmail(ctx, email)
 		if err != nil {
 			log.Printf("ERROR: Failed to get project status for email %s: %v", email, err)
-			// Handle specific errors for user-friendly messages
 			if strings.Contains(err.Error(), "user_not_found") {
 				return "Não encontramos um projeto com este e-mail. Por favor, verifique se digitou corretamente ou inicie um novo diagnóstico.", StateAcompanhamentoAskEmail, sessionData
 			}
-			// Generic error for timeouts or other backend issues
 			return "Tivemos um problema para consultar seu projeto e nossa equipe já foi notificada. Por favor, tente novamente em alguns instantes.", StateMainMenu, SessionData{}
 		}
 
-		// Build a response based on the status.
-		statusResponse := buildStatusResponse(status)
+		// Build a response based on the status by calling other core endpoints.
+		var statusResponse string
+		switch status.NextStep {
+		case "painel":
+			// In a real scenario, we might get the specific panel URL.
+			statusResponse = "✅ Ótima notícia! Seu pagamento foi confirmado e seu painel personalizado já está liberado.\n\nAcesse seu dashboard em: https://[URL_DO_SEU_FRONTEND]/dashboard"
+		case "pagamento":
+			// Call another endpoint to get the specific payment link.
+			pagamento, err := coreClient.GetPagamentoStatus(ctx, status.UserID)
+			if err != nil || pagamento.CheckoutURL == "" {
+				log.Printf("ERROR: Failed to get payment link for user %s: %v", status.UserID, err)
+				statusResponse = "Verificamos que seu diagnóstico foi concluído, mas tivemos um problema ao gerar seu link de pagamento. Por favor, entre em contato com o suporte."
+			} else {
+				statusResponse = fmt.Sprintf("Verificamos que seu diagnóstico foi concluído e estamos apenas aguardando a confirmação do pagamento para liberar seu painel.\n\nVocê pode finalizar o pagamento aqui: %s", pagamento.CheckoutURL)
+			}
+		case "diagnostico":
+			statusResponse = "Encontrei seu cadastro. Parece que você iniciou o diagnóstico mas ainda não o finalizou.\n\nContinue de onde parou em: https://[URL_DO_SEU_FRONTEND]/diagnostico"
+		default:
+			statusResponse = "Não consegui identificar o próximo passo para o seu projeto. Nossa equipe de suporte já foi notificada."
+		}
+
 
 		// Always finish with a feedback question.
+		sessionData.LastFeedbackFlow = "acompanhamento"
 		return statusResponse + "\n\n" + getFeedbackQuestion(sessionData.LastFeedbackFlow), StateFeedbackAsk, sessionData
+
 
 	// --- Outros Fluxos (com término em feedback) ---
 	case StateHumano, StatePlanosPagamento, StateSuporte, StateSobre:
@@ -118,21 +136,6 @@ func processMainMenu(userInput string) (string, State, SessionData) {
 	return responseText, nextState, sessionData
 }
 
-// buildStatusResponse creates a user-friendly message based on their status from the core backend.
-func buildStatusResponse(status *core.ProjectStatus) string {
-	// The 'flow' field from the core API determines the user's next action.
-	switch status.NextStep {
-	case "painel":
-		return "✅ Ótima notícia! Seu pagamento foi confirmado e seu painel personalizado já está liberado.\n\nAcesse seu dashboard em: https://[URL_DO_SEU_FRONTEND]/dashboard"
-	case "pagamento":
-		return "Verificamos que seu diagnóstico foi concluído e estamos apenas aguardando a confirmação do pagamento para liberar seu painel.\n\nVocê pode finalizar o pagamento aqui: https://[URL_DO_SEU_FRONTEND]/diagnostico/10-pagamento"
-	case "diagnostico":
-		return "Encontrei seu cadastro. Parece que você iniciou o diagnóstico mas ainda não o finalizou.\n\nContinue de onde parou em: https://[URL_DO_SEU_FRONTEND]/diagnostico"
-	default:
-		// This case also handles if the user is not found, although the error is caught before.
-		return "Não consegui encontrar um projeto ou diagnóstico ativo para o e-mail informado. Por favor, verifique o e-mail ou tente iniciar um novo diagnóstico no menu principal."
-	}
-}
 
 // getMainMenuText returns the standard main menu message.
 func getMainMenuText() string {

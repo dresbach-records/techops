@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
 )
@@ -34,19 +35,23 @@ type StateManager interface {
 	GetState(userID string) (State, SessionData)
 	SetState(userID string, state State, data SessionData)
 	SaveFeedback(userID, flowContext string, rating int) error
+	IsMessageProcessed(messageID string) (bool, error)
+	MarkMessageAsProcessed(messageID string) error
 }
 
 // --- InMemoryStateManager (for development fallback) ---
 type InMemoryStateManager struct {
-	states map[string]State
-	data   map[string]SessionData
-	mu     sync.RWMutex
+	states            map[string]State
+	data              map[string]SessionData
+	processedMessages map[string]bool
+	mu                sync.RWMutex
 }
 
 func NewInMemoryStateManager() *InMemoryStateManager {
 	return &InMemoryStateManager{
-		states: make(map[string]State),
-		data:   make(map[string]SessionData),
+		states:            make(map[string]State),
+		data:              make(map[string]SessionData),
+		processedMessages: make(map[string]bool),
 	}
 }
 
@@ -68,6 +73,20 @@ func (sm *InMemoryStateManager) SetState(userID string, state State, data Sessio
 
 func (sm *InMemoryStateManager) SaveFeedback(userID, flowContext string, rating int) error {
 	log.Printf("SIMULATING FEEDBACK SAVE: User %s, Flow %s, Rating %d", userID, flowContext, rating)
+	return nil
+}
+
+func (sm *InMemoryStateManager) IsMessageProcessed(messageID string) (bool, error) {
+	sm.mu.RLock()
+	defer sm.mu.RUnlock()
+	_, exists := sm.processedMessages[messageID]
+	return exists, nil
+}
+
+func (sm *InMemoryStateManager) MarkMessageAsProcessed(messageID string) error {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+	sm.processedMessages[messageID] = true
 	return nil
 }
 
@@ -133,5 +152,24 @@ func (sm *SQLStateManager) SaveFeedback(userID, flowContext string, rating int) 
 		return err
 	}
 	log.Printf("INFO: Saved feedback for user %s, flow %s, rating %d", userID, flowContext, rating)
+	return nil
+}
+
+func (sm *SQLStateManager) IsMessageProcessed(messageID string) (bool, error) {
+	var exists bool
+	query := "SELECT EXISTS(SELECT 1 FROM bot_processed_messages WHERE message_id = $1)"
+	err := sm.db.QueryRow(query, messageID).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("failed to query for message id %s: %w", messageID, err)
+	}
+	return exists, nil
+}
+
+func (sm *SQLStateManager) MarkMessageAsProcessed(messageID string) error {
+	query := "INSERT INTO bot_processed_messages (message_id) VALUES ($1) ON CONFLICT (message_id) DO NOTHING"
+	_, err := sm.db.Exec(query, messageID)
+	if err != nil {
+		return fmt.Errorf("failed to insert message id %s: %w", messageID, err)
+	}
 	return nil
 }

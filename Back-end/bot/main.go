@@ -31,18 +31,12 @@ func main() {
 		stateManager = NewSQLStateManager(db)
 	}
 
-	// Dependency Injection for the CoreClient
-	var coreClient core.CoreClient
-	if os.Getenv("BOT_ENV") == "production" {
-		log.Println("INFO: Initializing HTTP CoreClient for production.")
-		coreClient = core.NewHTTPClient(
-			os.Getenv("CORE_API_URL"),
-			os.Getenv("CORE_API_KEY"),
-		)
-	} else {
-		log.Println("INFO: Initializing MockCoreClient for development.")
-		coreClient = core.NewMockClient()
-	}
+	// Initialize the real HTTP client for the core backend.
+	log.Println("INFO: Initializing HTTP CoreClient...")
+	coreClient := core.NewHTTPClient(
+		os.Getenv("CORE_API_URL"),
+		os.Getenv("CORE_API_KEY"),
+	)
 
 	whatsAppClient := NewWhatsAppClient(os.Getenv("WHATSAPP_GRAPH_API_TOKEN"), os.Getenv("WHATSAPP_PHONE_NUMBER_ID"))
 	botHandler := NewBotHandler(stateManager, whatsAppClient, coreClient) // Pass client to handler

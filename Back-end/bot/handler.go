@@ -67,6 +67,19 @@ func (h *BotHandler) HandleWebhook(c *gin.Context) {
 			message := change.Value.Messages[0]
 			userPhone := message.From
 
+			// Idempotency Check: if message has been processed, skip.
+			isProcessed, err := h.StateManager.IsMessageProcessed(message.ID)
+			if err != nil {
+				log.Printf("ERROR: Failed to check message idempotency for ID %s: %v", message.ID, err)
+				// Continue processing but be aware of potential duplicates.
+			}
+			if isProcessed {
+				log.Printf("INFO: Duplicate message ID %s received. Skipping processing.", message.ID)
+				c.Status(http.StatusOK)
+				return
+			}
+
+
 			// Get current user state and session data
 			currentState, sessionData := h.StateManager.GetState(userPhone)
 			log.Printf("INFO: User %s [State: %s] | Received: '%s'", userPhone, currentState, message.Text.Body)
@@ -98,6 +111,11 @@ func (h *BotHandler) HandleWebhook(c *gin.Context) {
 			// Update the user's state and session data
 			h.StateManager.SetState(userPhone, nextState, nextSessionData)
 			log.Printf("INFO: User %s | State transition: %s -> %s", userPhone, currentState, nextState)
+			
+			// Mark message as processed for idempotency
+			if err := h.StateManager.MarkMessageAsProcessed(message.ID); err != nil {
+				log.Printf("ERROR: Failed to mark message ID %s as processed: %v", message.ID, err)
+			}
 		}
 	}
 
