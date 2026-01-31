@@ -15,7 +15,7 @@ export function Footer() {
               Privacidade
             </Link>
             <span className="text-muted-foreground">|</span>
-            <Link href="#" className="text-muted-foreground hover:text-primary">
+            <Link href="/termos-de-servico" className="text-muted-foreground hover:text-primary">
               Termos
             </Link>
           </div>
