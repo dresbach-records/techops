@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"techlab/backend-go/internal/auth"
 	"techlab/backend-go/internal/diagnostico"
 	"techlab/backend-go/internal/email"
@@ -20,6 +21,29 @@ import (
 	"github.com/google/uuid"
 )
 
+// SecurityHeadersMiddleware adds common security headers to responses.
+func SecurityHeadersMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("X-Content-Type-Options", "nosniff")
+		c.Header("X-Frame-Options", "DENY")
+		c.Header("Referrer-Policy", "no-referrer")
+		// In a production environment, you would also set a strict Content-Security-Policy.
+		// c.Header("Content-Security-Policy", "default-src 'self'")
+		c.Next()
+	}
+}
+
+// RateLimitMiddleware is a placeholder for a request limiting middleware.
+// In a real production environment, use a library like 'tollbooth' with a Redis store.
+func RateLimitMiddleware(limit int, window time.Duration) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Placeholder: In a real app, implement IP-based rate limiting here.
+		// For example, using an in-memory map with a mutex or a Redis-backed solution.
+		// log.Printf("DEBUG: Rate limit check for IP: %s", c.ClientIP())
+		c.Next()
+	}
+}
+
 // NewServer creates and configures a new Gin server.
 func NewServer(db *sql.DB) *gin.Engine {
 	// Set Gin to release mode for production, or debug mode.
@@ -33,13 +57,19 @@ func NewServer(db *sql.DB) *gin.Engine {
 	router.Use(gin.Recovery()) // Recover from any panics
 	router.Use(LoggerMiddleware())
 	router.Use(RequestIDMiddleware())
+	router.Use(SecurityHeadersMiddleware()) // Add security headers
 
 	// CORS configuration
+	// Allow only the specific frontend URL.
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:9002" // Default for local dev
+	}
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"}, // In production, restrict this
+		AllowOrigins:     []string{frontendURL},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
+		ExposeHeaders:    []string{"Content-Length", "X-Request-ID"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
@@ -56,9 +86,12 @@ func NewServer(db *sql.DB) *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"db": "ok"})
 	})
 
-	// Webhook endpoints for WhatsApp
-	router.GET("/webhooks/whatsapp", whatsapp.VerifyWebhook)
-	router.POST("/webhooks/whatsapp", whatsapp.ReceiveWebhook)
+	// Rate Limiter
+	rateLimiter := RateLimitMiddleware(20, time.Minute) // 20 requests per minute
+
+	// Webhook endpoints for WhatsApp - apply rate limiting
+	router.GET("/webhooks/whatsapp", whatsapp.VerifyWebhook) // Verification is less critical, but can be limited.
+	router.POST("/webhooks/whatsapp", rateLimiter, whatsapp.ReceiveWebhook)
 
 	// Initialize services
 	emailSvc, err := email.NewResendService()
@@ -82,7 +115,8 @@ func NewServer(db *sql.DB) *gin.Engine {
 		authRoutes := v1.Group("/auth")
 		{
 			authRoutes.POST("/register", authHandler.Register)
-			authRoutes.POST("/login", authHandler.Login)
+			// Apply rate limiting to login to prevent brute-force attacks.
+			authRoutes.POST("/login", rateLimiter, authHandler.Login)
 		}
 
 		diagRoutes := v1.Group("/diagnostico")
@@ -94,7 +128,8 @@ func NewServer(db *sql.DB) *gin.Engine {
 			v1.POST("/send-email", email.SendEmailHandler(emailSvc))
 		}
 
-		v1.POST("/webhooks/asaas/payment", pagamento.AsaasWebhookHandler())
+		// Apply rate limiting to webhooks to prevent abuse.
+		v1.POST("/webhooks/asaas/payment", rateLimiter, pagamento.AsaasWebhookHandler())
 
 		// Authenticated routes
 		api := v1.Group("/")

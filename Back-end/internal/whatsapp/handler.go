@@ -54,10 +54,11 @@ func ReceiveWebhook(c *gin.Context) {
 	if appSecret != "" && appSecret != "CHANGE_ME_IN_META_DEV_PORTAL" {
 		signature := c.GetHeader("X-Hub-Signature-256")
 		if !validateSignature(signature, body, appSecret) {
-			log.Printf("ERROR: Invalid WhatsApp webhook signature. Header: %s", signature)
+			log.Printf("ERROR: Invalid WhatsApp webhook signature. IP: %s, Header: %s", c.ClientIP(), signature)
 			c.JSON(http.StatusForbidden, gin.H{"error": "invalid signature"})
 			return
 		}
+		log.Println("SUCCESS: WhatsApp webhook signature validated.")
 	} else {
 		log.Println("WARNING: WHATSAPP_APP_SECRET not set. Skipping signature validation. NOT SAFE FOR PRODUCTION.")
 	}

@@ -78,7 +78,7 @@ func AsaasWebhookHandler() gin.HandlerFunc {
 		// 1. Verify the security token from Asaas
 		receivedToken := c.GetHeader("asaas-webhook-token")
 		if webhookToken != "" && webhookToken != "seu_token_aqui" && receivedToken != webhookToken {
-			log.Printf("WARNING: Invalid Asaas webhook token received. Got: '%s'", receivedToken)
+			log.Printf("WARNING: Invalid Asaas webhook token received. IP: %s, Token: '%s'", c.ClientIP(), receivedToken)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid webhook token"})
 			return
 		}
