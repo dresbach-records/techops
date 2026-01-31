@@ -1,11 +1,28 @@
 package painel
 
+// getModulesForPlan determines which sidebar modules are visible for a given plan.
+func getModulesForPlan(plan string) []string {
+	switch plan {
+	case "START":
+		return []string{"visao-geral", "diagnostico", "roadmap", "consultoria", "documentos", "suporte"}
+	case "BUILD":
+		return []string{"visao-geral", "diagnostico", "roadmap", "arquitetura", "consultoria", "documentos", "suporte"}
+	case "SCALE":
+		return []string{"visao-geral", "diagnostico", "roadmap", "arquitetura", "tech-ops", "ia", "consultoria", "documentos", "suporte"}
+	case "RECOVERY":
+		return []string{"visao-geral", "diagnostico", "roadmap", "arquitetura", "tech-ops", "ia", "seguranca", "consultoria", "documentos", "suporte"}
+	default:
+		return []string{"visao-geral", "consultoria", "documentos", "suporte"}
+	}
+}
+
 // BuildForUser constructs the dashboard data for a specific user.
-// For now, it returns a hardcoded dashboard structure.
 // The userID is passed for future use (e.g., fetching user-specific data).
 func BuildForUser(userID string, userName string) (*DashboardData, error) {
-	// In the future, fetch user data and determine their plan to customize the dashboard.
-	// For now, we return a static response modeled after the original frontend.
+	// In the future, fetch user data from DB to determine their plan.
+	// For now, we hardcode the plan to "BUILD" to demonstrate dynamic module loading.
+	userPlan := "BUILD"
+	userModules := getModulesForPlan(userPlan)
 
 	data := &DashboardData{
 		WelcomeMessage: "Bem-vindo, " + userName,
@@ -24,6 +41,7 @@ func BuildForUser(userID string, userName string) (*DashboardData, error) {
 			{Title: "Contrato de Consultoria.pdf", Icon: "FileText", Link: "/dashboard/documentos"},
 			{Title: "Checklist Inicial.docx", Icon: "FileText", Link: "/dashboard/documentos"},
 		},
+		Modules: userModules,
 	}
 
 	return data, nil

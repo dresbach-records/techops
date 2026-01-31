@@ -67,32 +67,23 @@ var PLANS = map[string]Plan{
 }
 
 // CalculatePlan determines the best plan based on diagnostic data.
+// This logic is now authoritative.
 func CalculatePlan(data RecommendPlanRequest) Plan {
-	criticalPains := []string{"custos", "divida_tecnica", "seguranca"}
-	hasCriticalPains := false
-	for _, dor := range data.Dores {
-		for _, cp := range criticalPains {
-			if dor == cp {
-				hasCriticalPains = true
-				break
-			}
-		}
-		if hasCriticalPains {
-			break
-		}
-	}
-
-	if data.Estagio == "reestruturacao" || (data.Estagio == "producao" && hasCriticalPains) {
+	if data.Estagio == "reestruturacao" {
 		return PLANS["RECOVERY"]
 	}
 
 	if data.Estagio == "producao" {
+		if len(data.Dores) >= 4 {
+			return PLANS["RECOVERY"]
+		}
 		return PLANS["SCALE"]
 	}
 
-	if data.Estagio == "prototipo" || (data.Estagio == "ideia" && data.Repositorio != "") {
+	if data.Estagio == "prototipo" {
 		return PLANS["BUILD"]
 	}
 
+	// Default for "ideia" and any other value
 	return PLANS["START"]
 }

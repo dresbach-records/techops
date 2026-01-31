@@ -45,4 +45,5 @@ export type DashboardData = {
   overviewCards: DashboardOverviewCard[];
   nextSteps: DashboardNextStep[];
   projectDocuments: DashboardProjectDocument[];
+  modules: string[];
 };

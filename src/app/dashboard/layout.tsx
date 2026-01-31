@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ClipboardCheck, GitFork, FileText, Briefcase, Menu, Bell } from "lucide-react";
+import { 
+    LayoutDashboard, ClipboardCheck, GitFork, FileText, Briefcase, Menu, Bell,
+    DraftingCompass, Server, Cpu, Shield, HelpCircle
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserNav } from "@/components/layout/UserNav";
 import React, { useState, useEffect } from "react";
@@ -18,6 +21,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DashboardProvider, useDashboard } from "@/contexts/DashboardContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardLayoutBaseProps {
     children: React.ReactNode;
@@ -90,16 +95,39 @@ export function DashboardLayoutBase({
     );
 }
 
-const navItems = [
-    { href: "/dashboard", label: "Visão Geral", icon: <LayoutDashboard /> },
-    { href: "/dashboard/diagnostico", label: "Diagnóstico Técnico", icon: <ClipboardCheck /> },
-    { href: "/dashboard/roadmap", label: "Roadmap", icon: <GitFork /> },
-    { href: "/dashboard/consultoria", label: "Consultoria", icon: <Briefcase /> },
-    { href: "/dashboard/documentos", label: "Documentos", icon: <FileText /> },
-];
+// All available nav items map
+const ALL_NAV_ITEMS: { [key: string]: { href: string; label: string; icon: React.ReactNode } } = {
+    'visao-geral': { href: "/dashboard", label: "Visão Geral", icon: <LayoutDashboard /> },
+    'diagnostico': { href: "/dashboard/diagnostico", label: "Diagnóstico Técnico", icon: <ClipboardCheck /> },
+    'roadmap': { href: "/dashboard/roadmap", label: "Roadmap", icon: <GitFork /> },
+    'arquitetura': { href: "/dashboard/arquitetura", label: "Arquitetura", icon: <DraftingCompass /> },
+    'tech-ops': { href: "/dashboard/tech-ops", label: "Tech Ops", icon: <Server /> },
+    'ia': { href: "/dashboard/ia", label: "IA e Automação", icon: <Cpu /> },
+    'seguranca': { href: "/dashboard/seguranca", label: "Segurança", icon: <Shield /> },
+    'consultoria': { href: "/dashboard/consultoria", label: "Consultoria", icon: <Briefcase /> },
+    'documentos': { href: "/dashboard/documentos", label: "Documentos", icon: <FileText /> },
+    'suporte': { href: "/dashboard/suporte", label: "Suporte", icon: <HelpCircle /> },
+};
+
 
 function ClientSidebarNav() {
     const pathname = usePathname();
+    const { dashboardData, loading } = useDashboard();
+
+    if (loading) {
+        return (
+            <div className="grid items-start px-4 text-sm font-medium gap-1">
+                {[...Array(6)].map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                ))}
+            </div>
+        );
+    }
+    
+    const navItems = dashboardData?.modules
+        ?.map(key => ALL_NAV_ITEMS[key])
+        .filter(Boolean) ?? [];
+
     return (
        <nav className="grid items-start px-4 text-sm font-medium">
             {navItems.map((item) => (
@@ -111,7 +139,7 @@ function ClientSidebarNav() {
                         pathname === item.href && "bg-muted text-primary"
                     )}
                 >
-                    {React.cloneElement(item.icon, { className: "h-4 w-4" })}
+                    {React.cloneElement(item.icon as React.ReactElement, { className: "h-4 w-4" })}
                     {item.label}
                 </Link>
             ))}
@@ -119,7 +147,7 @@ function ClientSidebarNav() {
     );
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     const { user } = useAuth();
     const [hasNotification, setHasNotification] = useState(false);
     const [playSound, setPlaySound] = useState(false);
@@ -184,4 +212,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {children}
         </DashboardLayoutBase>
     );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <DashboardProvider>
+            <DashboardLayoutContent>{children}</DashboardLayoutContent>
+        </DashboardProvider>
+    )
 }

@@ -29,4 +29,5 @@ type DashboardData struct {
 	OverviewCards    []OverviewCard    `json:"overviewCards"`
 	NextSteps        []NextStep        `json:"nextSteps"`
 	ProjectDocuments []ProjectDocument `json:"projectDocuments"`
+	Modules          []string          `json:"modules"`
 }

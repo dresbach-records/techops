@@ -8,11 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { useEffect, useState } from "react";
-import { getDashboardData } from "@/lib/api";
-import { useAuth } from "@/contexts/AuthContext";
-import type { DashboardData, DashboardOverviewCard } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDashboard } from "@/contexts/DashboardContext";
+import type { DashboardOverviewCard } from "@/types";
 
 const communicationData = [
   { name: 'Seg', value: 200 },
@@ -72,25 +70,7 @@ function DashboardSkeleton() {
 }
 
 export default function DashboardPage() {
-    const { user } = useAuth();
-    const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const data = await getDashboardData();
-                setDashboardData(data);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : "Ocorreu um erro desconhecido.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
+    const { dashboardData, loading, error, refetch } = useDashboard();
 
     if (loading) {
         return <DashboardSkeleton />;
@@ -102,7 +82,7 @@ export default function DashboardPage() {
                 <div className="text-center">
                     <h2 className="text-xl font-semibold text-destructive">Falha ao carregar o painel</h2>
                     <p className="text-muted-foreground mt-2">{error || "Não foi possível buscar os dados do seu painel."}</p>
-                    <Button onClick={() => window.location.reload()} className="mt-4">Tentar Novamente</Button>
+                    <Button onClick={() => refetch()} className="mt-4">Tentar Novamente</Button>
                 </div>
             </div>
         );
