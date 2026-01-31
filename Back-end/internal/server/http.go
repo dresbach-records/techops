@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"techlab/backend-go/internal/whatsapp"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -41,6 +42,11 @@ func NewServer() *gin.Engine {
 			"status": "UP",
 		})
 	})
+
+	// Webhook endpoints for WhatsApp
+	router.GET("/webhooks/whatsapp", whatsapp.VerifyWebhook)
+	router.POST("/webhooks/whatsapp", whatsapp.ReceiveWebhook)
+
 
 	// API versioning group
 	v1 := router.Group("/v1")
