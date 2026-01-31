@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -123,7 +124,11 @@ export default function AdminDashboardPage() {
                 </Table>
             </CardContent>
              <div className="p-4 border-t flex justify-end">
-                <Button variant="ghost" size="sm">Ver Todos <ChevronRight className="h-4 w-4 ml-1" /></Button>
+                <Button variant="ghost" size="sm" asChild>
+                    <Link href="/admin/diagnosticos">
+                        Ver Todos <ChevronRight className="h-4 w-4 ml-1" />
+                    </Link>
+                </Button>
             </div>
         </Card>
         
