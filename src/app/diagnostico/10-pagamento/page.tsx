@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Loader2, ChevronLeft, FileDown, Info } from "lucide-react";
+import { CreditCard, Loader2, ChevronLeft, FileDown, Info, ServerCrash, Check } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import { useDiagnostic } from "@/contexts/DiagnosticContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -226,45 +226,40 @@ function TermsOfServiceModal() {
 }
 
 
-export default function PaymentPage() {
+export default function ResultadoPagamentoPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { data: diagnosticData, resetData } = useDiagnostic();
   const { user, signUp } = useAuth();
-  const [isLoading, setIsLoading] = useState<'card' | 'boleto' | null>(null);
-  const [isLoadingPlan, setIsLoadingPlan] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'boleto' | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const [recommendedPlan, setRecommendedPlan] = useState<Plan | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState(true);
+  const [errorPlan, setErrorPlan] = useState<string | null>(null);
+
   const [selectedInstallment, setSelectedInstallment] = useState('1');
 
   useEffect(() => {
     const fetchPlan = async () => {
         if (diagnosticData.projeto.estagio) {
             try {
-                setIsLoadingPlan(true);
+                setLoadingPlan(true);
+                setErrorPlan(null);
                 const plan = await getRecommendedPlan(diagnosticData.projeto);
                 setRecommendedPlan(plan);
             } catch (error) {
-                 toast({
-                    variant: "destructive",
-                    title: "Erro ao Carregar Plano",
-                    description: error instanceof Error ? error.message : "Não foi possível recomendar um plano. Tente voltar e avançar novamente.",
-                });
+                 setErrorPlan(error instanceof Error ? error.message : "Não foi possível recomendar um plano. Tente voltar e avançar novamente.");
             } finally {
-                setIsLoadingPlan(false);
+                setLoadingPlan(false);
             }
         } else {
-            // Se não houver dados do estágio, não podemos carregar o plano
-            setIsLoadingPlan(false);
-             toast({
-                variant: "destructive",
-                title: "Diagnóstico Incompleto",
-                description: "Por favor, preencha as etapas anteriores do diagnóstico.",
-            });
-            router.push('/diagnostico/06-estagio');
+            setErrorPlan("Dados do diagnóstico incompletos. Por favor, retorne às etapas anteriores.");
+            setLoadingPlan(false);
         }
     };
     fetchPlan();
-}, [diagnosticData.projeto, toast, router]);
+  }, [diagnosticData.projeto]);
 
   const totalValue = recommendedPlan ? recommendedPlan.setupFee + (recommendedPlan.monthlyFee > 0 ? recommendedPlan.monthlyFee : 0) : 0;
   const installmentOptions = useMemo(() => calculateInstallments(totalValue), [totalValue]);
@@ -279,8 +274,10 @@ export default function PaymentPage() {
         });
         return;
     }
+    
+    setPaymentMethod(method);
+    setIsLoading(true);
 
-    setIsLoading(method);
     try {
         let loggedInUser = user;
         // If user is not logged in, sign them up first.
@@ -341,66 +338,36 @@ export default function PaymentPage() {
             title: "Erro no Processamento",
             description: error instanceof Error ? error.message : "Não foi possível finalizar. Verifique os dados e tente novamente.",
         });
-        setIsLoading(null);
+        setIsLoading(false);
+        setPaymentMethod(null);
     }
   };
+  
+  const renderPlanContent = () => {
+    if (loadingPlan) {
+        return (
+             <div className="flex flex-col items-center justify-center text-center min-h-[350px]">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+                <p className="text-muted-foreground">Analisando seu diagnóstico e gerando seu plano...</p>
+            </div>
+        )
+    }
 
-  if (isLoadingPlan) {
+    if (errorPlan || !recommendedPlan) {
+         return (
+            <div className="flex flex-col items-center justify-center text-center min-h-[350px]">
+                <ServerCrash className="h-12 w-12 text-destructive mb-4" />
+                <p className="font-semibold">Erro ao Processar seu Diagnóstico</p>
+                <p className="text-muted-foreground text-sm max-w-sm">{errorPlan || "Não foi possível recomendar um plano."}</p>
+                 <Button variant="outline" size="sm" className="mt-4" onClick={() => window.location.reload()}>Tentar Novamente</Button>
+            </div>
+        )
+    }
+
     return (
-         <>
-            <CardHeader className="text-center p-8">
-                <div className="mx-auto bg-primary text-primary-foreground rounded-full h-12 w-12 flex items-center justify-center mb-4">
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                </div>
-                <CardTitle className="font-headline text-2xl">Analisando seu diagnóstico...</CardTitle>
-                <CardDescription>Estamos calculando o plano ideal para suas necessidades.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 min-h-[250px] px-8 flex items-center justify-center">
-                <p className="text-muted-foreground">Aguarde um momento.</p>
-            </CardContent>
-             <CardFooter className="flex items-center justify-center border-t bg-slate-50/50 p-4">
-                <Button variant="ghost" asChild>
-                    <Link href="/diagnostico/09-expectativa"><ChevronLeft className="mr-2 h-4 w-4" /> Voltar</Link>
-                </Button>
-            </CardFooter>
-        </>
-    )
-  }
-
-  if (!recommendedPlan) {
-    return (
-        <>
-           <CardHeader className="text-center p-8">
-               <div className="mx-auto bg-destructive text-destructive-foreground rounded-full h-12 w-12 flex items-center justify-center mb-4">
-                   <Info className="h-6 w-6" />
-               </div>
-               <CardTitle className="font-headline text-2xl">Erro ao carregar o plano</CardTitle>
-               <CardDescription>Não foi possível determinar um plano com os dados fornecidos.</CardDescription>
-           </CardHeader>
-           <CardContent className="space-y-6 min-h-[250px] px-8 flex items-center justify-center">
-               <p className="text-muted-foreground text-center">Por favor, volte e verifique as informações do seu diagnóstico.</p>
-           </CardContent>
-            <CardFooter className="flex items-center justify-center border-t bg-slate-50/50 p-4">
-               <Button variant="ghost" asChild>
-                   <Link href="/diagnostico/09-expectativa"><ChevronLeft className="mr-2 h-4 w-4" /> Voltar</Link>
-               </Button>
-           </CardFooter>
-       </>
-   )
-  }
-
-  return (
-    <>
-        <CardHeader className="text-center p-8">
-          <div className="mx-auto bg-primary text-primary-foreground rounded-full h-12 w-12 flex items-center justify-center mb-4">
-            <CreditCard className="h-6 w-6" />
-          </div>
-          <CardTitle className="font-headline text-2xl">Plano Recomendado</CardTitle>
-          <CardDescription>Com base em suas respostas, este é o plano ideal para você.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6 min-h-[250px] px-8">
-            <Alert>
-                <Info className="h-4 w-4" />
+        <div className="space-y-6">
+            <Alert variant="default" className="border-primary">
+                <Check className="h-4 w-4" />
                 <AlertTitle className="font-bold">{recommendedPlan.name}</AlertTitle>
                 <AlertDescription>
                     {recommendedPlan.description}
@@ -416,7 +383,7 @@ export default function PaymentPage() {
                     <p className="font-bold text-lg">{totalValue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
                 </div>
 
-                <div className="space-y-2">
+                 <div className="space-y-2">
                     <Label htmlFor="installments">Pagamento em até 12x no cartão</Label>
                     <Select onValueChange={setSelectedInstallment} defaultValue={selectedInstallment}>
                         <SelectTrigger id="installments">
@@ -433,14 +400,14 @@ export default function PaymentPage() {
                     </p>
                 </div>
             </div>
-            
+
             <div className="space-y-4">
-                <Button onClick={() => handlePayment('card')} disabled={!!isLoading} className="w-full h-12">
-                    {isLoading === 'card' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                <Button onClick={() => handlePayment('card')} disabled={isLoading} className="w-full h-12">
+                    {isLoading && paymentMethod === 'card' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
                     Pagar com Cartão de Crédito
                 </Button>
-                <Button onClick={() => handlePayment('boleto')} disabled={!!isLoading} variant="secondary" className="w-full h-12">
-                    {isLoading === 'boleto' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                <Button onClick={() => handlePayment('boleto')} disabled={isLoading} variant="secondary" className="w-full h-12">
+                    {isLoading && paymentMethod === 'boleto' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Gerar Boleto e Pagar Depois
                 </Button>
             </div>
@@ -459,7 +426,21 @@ export default function PaymentPage() {
                 <ExtratoDialogContent plan={recommendedPlan} />
               </Dialog>
             </div>
-            
+        </div>
+    );
+  }
+
+  return (
+    <>
+        <CardHeader className="text-center p-8">
+          <div className="mx-auto bg-primary text-primary-foreground rounded-full h-12 w-12 flex items-center justify-center mb-4">
+            <CreditCard className="h-6 w-6" />
+          </div>
+          <CardTitle className="font-headline text-2xl">Plano Recomendado e Pagamento</CardTitle>
+          <CardDescription>Esta é a etapa final. Confira seu plano e finalize a contratação.</CardDescription>
+        </CardHeader>
+        <CardContent className="min-h-[250px] px-8">
+            {renderPlanContent()}
         </CardContent>
         <CardFooter className="flex items-center justify-center border-t bg-slate-50/50 p-4">
             <Button variant="ghost" asChild>
