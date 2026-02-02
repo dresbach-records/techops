@@ -1,7 +1,7 @@
+
 "use client"
 
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,16 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Briefcase, CreditCard, Server, AlertTriangle, Info, ChevronRight, AlertCircle, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const AdminConsultoriaChart = dynamic(
-  () => import('@/components/charts/AdminConsultoriaChart').then(mod => mod.AdminConsultoriaChart),
-  { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> }
-);
-
-const AdminFinanceiroChart = dynamic(
-  () => import('@/components/charts/AdminFinanceiroChart').then(mod => mod.AdminFinanceiroChart),
-  { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> }
-);
-
+// CHARTS ARE TEMPORARILY DISABLED TO FIX A BUILD ERROR
 
 const overviewCards = [
     {
@@ -153,7 +144,8 @@ export default function AdminDashboardPage() {
                 <CardTitle>Próximas Consultorias</CardTitle>
             </CardHeader>
             <CardContent>
-                <AdminConsultoriaChart />
+                <Skeleton className="h-[300px] w-full" />
+                <p className="text-center text-xs text-muted-foreground mt-2">Gráfico temporariamente desativado para corrigir erro de build.</p>
             </CardContent>
         </Card>
         <Card>
@@ -161,7 +153,8 @@ export default function AdminDashboardPage() {
                 <CardTitle>Resumo Financeiro</CardTitle>
             </CardHeader>
             <CardContent>
-                 <AdminFinanceiroChart />
+                 <Skeleton className="h-[300px] w-full" />
+                 <p className="text-center text-xs text-muted-foreground mt-2">Gráfico temporariamente desativado para corrigir erro de build.</p>
             </CardContent>
         </Card>
       </div>
