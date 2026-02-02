@@ -1,18 +1,11 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, AlertTriangle, Clock, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const TechLabLatencyChart = dynamic(
-  () => import("@/components/charts/TechLabLatencyChart").then((mod) => mod.TechLabLatencyChart),
-  { ssr: false, loading: () => <Skeleton className="h-[250px] w-full" /> }
-);
-
 
 const statusCards = [
     {
@@ -114,7 +107,8 @@ export default function TechLabPage() {
                 <CardDescription>Tempo médio de resposta dos últimos 30 minutos.</CardDescription>
             </CardHeader>
             <CardContent>
-                <TechLabLatencyChart />
+                <Skeleton className="h-[250px] w-full" />
+                <p className="text-center text-xs text-muted-foreground mt-2">Gráfico temporariamente desativado para corrigir erro de build.</p>
             </CardContent>
         </Card>
         

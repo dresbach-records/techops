@@ -1,14 +1,58 @@
-
 "use client";
 
-// This page's content is temporarily removed to isolate a build error.
-// The original content included a chart component that is suspected to cause
-// SSR compatibility issues. This minimal version helps confirm the root cause.
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// O componente de gráfico foi desativado temporariamente para resolver um erro de build.
+// A reintrodução será feita de forma segura (SSR: false) após a validação.
+
 export default function FinanceiroPage() {
   return (
-    <div className="p-6">
-        <h1 className="text-2xl font-bold">Página de Finanças</h1>
-        <p className="text-muted-foreground">O conteúdo desta página, incluindo gráficos, foi temporariamente removido para diagnosticar um erro de build.</p>
+    <div className="grid gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline text-3xl">Financeiro</CardTitle>
+          <CardDescription>
+            Acompanhe o faturamento, MRR e métricas financeiras.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-8">
+            <div className="grid md:grid-cols-3 gap-6">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Faturamento Total</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">R$ 45.231,89</div>
+                        <p className="text-xs text-muted-foreground">+20.1% do mês passado</p>
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">MRR (Receita Recorrente)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">R$ 15.872,00</div>
+                        <p className="text-xs text-muted-foreground">+5.2% do mês passado</p>
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Clientes Ativos</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">12</div>
+                        <p className="text-xs text-muted-foreground">+2 este mês</p>
+                    </CardContent>
+                </Card>
+            </div>
+             <div>
+                <h3 className="text-xl font-semibold mb-4">Evolução do MRR</h3>
+                 <Skeleton className="h-[300px] w-full" />
+                 <p className="text-center text-xs text-muted-foreground mt-2">Gráfico temporariamente desativado para corrigir erro de build.</p>
+            </div>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }
