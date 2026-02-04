@@ -18,8 +18,8 @@ let isFirebaseConfigured = false;
 // Check if all required Firebase config values are present and not placeholders
 const hasValidConfig =
   firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY" &&
-  firebaseConfig.authDomain &&
-  firebaseConfig.projectId;
+  firebaseConfig.authDomain && firebaseConfig.authDomain !== "YOUR_AUTH_DOMAIN" &&
+  firebaseConfig.projectId && firebaseConfig.projectId !== "YOUR_PROJECT_ID";
 
 if (hasValidConfig) {
   try {
@@ -28,11 +28,16 @@ if (hasValidConfig) {
     isFirebaseConfigured = true;
   } catch (error) {
     console.error("Firebase initialization failed:", error);
-    // App remains uninitialized, isFirebaseConfigured remains false
+    // Explicitly reset on failure
+    app = null;
+    auth = null;
+    isFirebaseConfigured = false;
   }
 } else {
   // This warning will be visible in the server logs during build and in the browser console.
-  console.warn("Firebase config is missing or incomplete. Authentication features will be disabled.");
+  if (process.env.NODE_ENV !== 'production') {
+      console.warn("Firebase config is missing or contains placeholders. Authentication features will be disabled.");
+  }
 }
 
 export { app, auth, isFirebaseConfigured };
