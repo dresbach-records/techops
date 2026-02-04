@@ -13,7 +13,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<void>;
+  signUp: (name: string, email: string, password: string) => Promise<UserMeResponse>;
   logout: () => void;
 }
 
@@ -61,8 +61,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // After creating the user in Firebase, create the profile in our backend.
         const backendUser = await registerUserProfile(name);
         setUser(backendUser);
+        return backendUser;
     }
     // onAuthStateChanged will also fire and handle setting the user state.
+    throw new Error("Failed to create Firebase user.");
   };
 
   const logout = useCallback(async () => {
