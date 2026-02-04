@@ -1,10 +1,12 @@
+"use client";
+
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, DraftingCompass, Network, ArrowRight, Heart } from "lucide-react";
 import { getDonations } from "@/lib/api";
 import { AnonymizedDonation } from "@/types/pagamento";
+import { useEffect, useState } from "react";
 
 const features = [
   {
@@ -43,13 +45,20 @@ const howItWorksSteps = [
 ];
 
 
-export default async function HomePage() {
-  let donations: AnonymizedDonation[] = [];
-  try {
-    donations = await getDonations();
-  } catch (error) {
-    console.error("Failed to fetch donations:", error);
-  }
+export default function HomePage() {
+  const [donations, setDonations] = useState<AnonymizedDonation[]>([]);
+
+  useEffect(() => {
+    const fetchDonations = async () => {
+      try {
+        const data = await getDonations();
+        setDonations(data);
+      } catch (error) {
+        console.error("Failed to fetch donations:", error);
+      }
+    };
+    fetchDonations();
+  }, []);
 
   return (
     <>

@@ -58,7 +58,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Erro no Login",
-        description: error instanceof Error ? error.message : "E-mail ou senha inválidos.",
+        description: error instanceof Error ? "E-mail ou senha inválidos." : "E-mail ou senha inválidos.",
       });
       setIsLoading(false);
     }

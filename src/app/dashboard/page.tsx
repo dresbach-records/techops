@@ -69,7 +69,7 @@ export default function DashboardPage() {
     return (
         <div className="flex flex-col gap-6">
             <div>
-                <h1 className="text-2xl font-bold font-headline">Painel do Cliente</h1>
+                <h1 className="text-2xl font-bold font-headline">Visão Geral</h1>
                 <p className="text-muted-foreground">Bem-vindo, {user?.nome}. Seu painel é controlado pelo seu plano e status.</p>
             </div>
 

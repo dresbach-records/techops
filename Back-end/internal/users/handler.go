@@ -8,19 +8,52 @@ import (
 
 // Handler holds the services required by the user handlers.
 type Handler struct {
-	repo Repository
+	service Service
 }
 
 // NewHandler creates a new user handler.
-func NewHandler(r Repository) *Handler {
-	return &Handler{repo: r}
+func NewHandler(s Service) *Handler {
+	return &Handler{service: s}
 }
 
-// GetMe returns the details of the currently authenticated user based on the UserMeResponse contract.
+// RegisterRequest defines the expected JSON for user registration.
+type RegisterRequest struct {
+	Nome string `json:"nome" binding:"required,min=2"`
+}
+
+// Register handles creation of a new user profile after Firebase registration.
+func (h *Handler) Register(c *gin.Context) {
+	var req RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: " + err.Error()})
+		return
+	}
+
+	// Get user details from token claims, placed by the middleware
+	firebaseUID, _ := c.Get("firebase_uid")
+	email, _ := c.Get("firebase_email")
+
+	if firebaseUID.(string) == "" || email.(string) == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims for registration"})
+		return
+	}
+
+	user, err := h.service.Register(req.Nome, email.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, user)
+}
+
+// GetMe returns the details of the currently authenticated user.
 func (h *Handler) GetMe(c *gin.Context) {
+	// The middleware already resolved the token to our internal user ID
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "User ID not found in token context"})
+		// This can happen if the user is in Firebase but not yet in our DB.
+		c.JSON(http.StatusNotFound, gin.H{"error": "User profile not found in our system."})
 		return
 	}
 
@@ -30,7 +63,7 @@ func (h *Handler) GetMe(c *gin.Context) {
 		return
 	}
 
-	user, err := h.repo.FindByID(id)
+	user, err := h.service.FindByID(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
@@ -43,7 +76,7 @@ func (h *Handler) GetMe(c *gin.Context) {
 		Email:  user.Email,
 		Role:   user.Role,
 		Status: user.Status,
-		Flow:   user.FlowStep, // Map internal DB field name to public contract name
+		Flow:   user.FlowStep,
 	}
 
 	c.JSON(http.StatusOK, response)

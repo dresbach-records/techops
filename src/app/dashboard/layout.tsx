@@ -1,17 +1,17 @@
+
 "use client";
 
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { 
-    LayoutDashboard, ClipboardCheck, GitFork, FileText, Briefcase, Menu, Bell,
-    DraftingCompass, Server, Cpu, Shield, HelpCircle
+    LayoutDashboard, ClipboardCheck, GitFork, FileText, Briefcase, Menu,
+    DraftingCompass, Server, Cpu, Shield, HelpCircle, Rocket
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserNav } from "@/components/layout/UserNav";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardProvider, useDashboard } from "@/contexts/DashboardContext";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,7 +21,6 @@ interface DashboardLayoutBaseProps {
     sidebarContent: React.ReactNode;
     headerRightContent: React.ReactNode;
     logoLink: string;
-    logoText: string; // This prop is now unused as per the roadmap.
 }
 
 export function DashboardLayoutBase({
@@ -31,59 +30,45 @@ export function DashboardLayoutBase({
     logoLink,
 }: DashboardLayoutBaseProps) {
     return (
-       <div className="flex h-screen">
-            {/* Desktop Sidebar */}
-            <aside className="hidden w-64 flex-col border-r bg-white md:flex">
-                <div className="flex h-16 items-center border-b px-6">
-                    <Link href={logoLink}>
-                        <Image src="/logotech.png" alt="Tech Lab Logo" width={36} height={36} className="h-9 w-auto" />
-                    </Link>
-                </div>
-                <div className="flex-1 overflow-y-auto py-4">
-                    {sidebarContent}
-                </div>
-            </aside>
-
-            {/* Main content area */}
-            <div className="flex flex-1 flex-col">
-                {/* Header */}
-                <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-white px-6">
-                    <div className="md:hidden">
-                        <Sheet>
-                            <SheetTrigger asChild>
-                                <Button variant="outline" size="icon" className="shrink-0">
-                                    <Menu className="h-5 w-5" />
-                                </Button>
-                            </SheetTrigger>
-                            <SheetContent side="left" className="flex flex-col p-0 w-64 bg-white">
-                                {/* Mobile sidebar content */}
-                                <div className="flex h-16 items-center border-b px-6">
-                                    <Link href={logoLink}>
-                                        <Image src="/logotech.png" alt="Tech Lab Logo" width={36} height={36} className="h-9 w-auto" />
-                                    </Link>
-                                </div>
-                                <div className="flex-1 overflow-y-auto py-4">
-                                    {sidebarContent}
-                                </div>
-                            </SheetContent>
-                        </Sheet>
+       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+            <div className="hidden border-r bg-muted/40 md:block">
+                <div className="flex h-full max-h-screen flex-col gap-2">
+                    <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+                        <Link href={logoLink} className="flex items-center gap-2 font-semibold">
+                            <Rocket className="h-8 w-8 text-primary" />
+                            <span className="font-headline text-lg">Tech Lab</span>
+                        </Link>
                     </div>
-                    {/* Spacer for mobile */}
-                    <div className="flex-1 md:hidden" />
-                    {headerRightContent}
-                </header>
-                
-                {/* Main + Footer scrollable area */}
-                <div className="flex-1 overflow-y-auto">
-                    <main className="p-6 bg-gray-50/50 min-h-[calc(100vh-8rem)]">
-                        {children}
-                    </main>
-                    <footer className="flex h-12 items-center justify-center border-t bg-white">
-                        <p className="text-center text-sm text-muted-foreground">TECH LAB © 2026</p>
-                    </footer>
+                    <div className="flex-1">
+                        {sidebarContent}
+                    </div>
                 </div>
             </div>
-        </div>
+             <div className="flex flex-col">
+                <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+                     <Sheet>
+                        <SheetTrigger asChild>
+                            <Button
+                            variant="outline"
+                            size="icon"
+                            className="shrink-0 md:hidden"
+                            >
+                            <Menu className="h-5 w-5" />
+                            <span className="sr-only">Toggle navigation menu</span>
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="flex flex-col">
+                            {sidebarContent}
+                        </SheetContent>
+                    </Sheet>
+                    <div className="w-full flex-1" />
+                    {headerRightContent}
+                </header>
+                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-gray-50/50">
+                   {children}
+                </main>
+             </div>
+       </div>
     );
 }
 
@@ -108,7 +93,7 @@ function ClientSidebarNav() {
 
     if (loading) {
         return (
-            <div className="grid items-start px-4 text-sm font-medium gap-1">
+            <div className="grid items-start px-2 text-sm font-medium lg:px-4 gap-1">
                 {[...Array(6)].map((_, i) => (
                     <Skeleton key={i} className="h-10 w-full" />
                 ))}
@@ -121,7 +106,7 @@ function ClientSidebarNav() {
         .filter(Boolean) ?? [];
 
     return (
-       <nav className="grid items-start px-4 text-sm font-medium">
+       <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
             {navItems.map((item) => (
                 <Link
                     key={item.href}
@@ -144,7 +129,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
     const headerRightContent = (
         <div className="flex items-center gap-2">
-             <span className="text-sm font-medium hidden sm:block">Bem-vindo, {user?.name}</span>
+             <span className="text-sm font-medium hidden sm:block">Bem-vindo, {user?.nome}</span>
             <UserNav />
         </div>
     );
@@ -152,7 +137,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     return (
         <DashboardLayoutBase
             logoLink="/"
-            logoText="Tech Lab"
             sidebarContent={<ClientSidebarNav />}
             headerRightContent={headerRightContent}
         >

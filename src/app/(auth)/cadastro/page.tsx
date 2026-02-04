@@ -64,7 +64,7 @@ export default function SignupPage() {
       toast({
         variant: "destructive",
         title: "Erro no Cadastro",
-        description: error instanceof Error ? error.message : "Ocorreu um erro desconhecido.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro desconhecido. O e-mail pode já estar em uso.",
       });
        setIsLoading(false);
     }

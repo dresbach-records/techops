@@ -20,7 +20,8 @@ func NewHandler(s Service) *Handler {
 func (h *Handler) GetPainel(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "User ID not found in context"})
+		// This can happen if user exists in Firebase but profile hasn't been created in our DB yet.
+		c.JSON(http.StatusForbidden, gin.H{"error": "User profile not found. Please complete registration."})
 		return
 	}
 

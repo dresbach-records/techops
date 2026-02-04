@@ -1,23 +1,19 @@
 "use client";
 
 import type { UserMeResponse } from "@/types/user";
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-  useCallback,
-} from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { login as apiLogin, register as apiRegister, getMe } from "@/lib/api";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, type User as FirebaseUser } from "firebase/auth";
+import { registerUserProfile, getMe } from "@/lib/api";
+import { auth as firebaseAuth } from "@/lib/firebase";
 
 interface AuthContextType {
   user: UserMeResponse | null;
+  firebaseUser: FirebaseUser | null;
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<UserMeResponse | null>;
+  signUp: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -25,55 +21,64 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserMeResponse | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  
-  const logout = useCallback(() => {
-    localStorage.removeItem("authToken");
-    setUser(null);
-    router.push("/");
-  }, [router]);
 
-  // This effect runs once on mount to check for an existing session.
-  useEffect(() => {
-    const initializeAuth = async () => {
-      const token = localStorage.getItem("authToken");
-      if (token) {
-        try {
-          // Verify token with backend and get user data
-          const fetchedUser = await getMe();
-          setUser(fetchedUser);
-        } catch (error) {
-          console.error("Auth initialization failed, token might be invalid:", error);
-          logout();
-        }
+  const handleAuthChange = useCallback(async (fbUser: FirebaseUser | null) => {
+    if (fbUser) {
+      setFirebaseUser(fbUser);
+      try {
+        // After firebase auth is confirmed, get our own backend user profile
+        const backendUser = await getMe();
+        setUser(backendUser);
+      } catch (error) {
+        // This might happen if the user exists in Firebase but not in our DB yet.
+        // The signUp flow will handle creating the user profile.
+        console.warn("Could not fetch backend user profile:", error);
+        setUser(null); // Ensure local state is clean
       }
-      setLoading(false);
-    };
-    initializeAuth();
-  }, [logout]);
+    } else {
+      setFirebaseUser(null);
+      setUser(null);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, handleAuthChange);
+    return () => unsubscribe();
+  }, [handleAuthChange]);
 
   const login = async (email: string, password: string) => {
-    const { access_token } = await apiLogin(email, password);
-    localStorage.setItem("authToken", access_token);
-    const fetchedUser = await getMe();
-    setUser(fetchedUser);
+    await signInWithEmailAndPassword(firebaseAuth, email, password);
+    // onAuthStateChanged will handle the rest
   };
-  
-  const signUp = async (name: string, email: string, password: string): Promise<UserMeResponse | null> => {
-    const { access_token } = await apiRegister(name, email, password);
-    localStorage.setItem("authToken", access_token);
-    const fetchedUser = await getMe();
-    setUser(fetchedUser);
-    return fetchedUser;
+
+  const signUp = async (name: string, email: string, password: string) => {
+    const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+    if (userCredential.user) {
+        // After creating the user in Firebase, create the profile in our backend.
+        const backendUser = await registerUserProfile(name);
+        setUser(backendUser);
+    }
+    // onAuthStateChanged will also fire and handle setting the user state.
   };
+
+  const logout = useCallback(async () => {
+    await signOut(firebaseAuth);
+    setUser(null);
+    setFirebaseUser(null);
+    router.push("/");
+  }, [router]);
   
-  const isAuthenticated = !!user;
+  const isAuthenticated = !!firebaseUser && !!user;
   
   return (
     <AuthContext.Provider
       value={{
         user,
+        firebaseUser,
         isAuthenticated,
         loading,
         login,

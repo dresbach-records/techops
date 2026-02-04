@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, Rocket } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserNav } from "./UserNav";
 
@@ -18,10 +17,11 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-24 items-center">
+      <div className="container flex h-20 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logotech.png" alt="Tech Lab Logo" width={500} height={500} className="size-20" />
+            <Rocket className="h-8 w-8 text-primary" />
+            <span className="font-headline text-2xl font-bold">Tech Lab</span>
           </Link>
         </div>
         <nav className="hidden items-center space-x-6 text-sm font-medium md:flex flex-1 justify-center">
@@ -40,7 +40,7 @@ export function Navbar() {
             {loading ? null : isAuthenticated ? (
                 <>
                     <Button variant="outline" asChild>
-                        <Link href="/dashboard">Dashboard</Link>
+                        <Link href="/flow">Dashboard</Link>
                     </Button>
                     <UserNav />
                 </>
@@ -64,7 +64,8 @@ export function Navbar() {
             <SheetContent side="left">
               <div className="flex flex-col space-y-4 p-4">
                 <Link href="/" className="flex items-center gap-2 mb-4">
-                     <Image src="/logotech.png" alt="Tech Lab Logo" width={500} height={500} className="size-20" />
+                     <Rocket className="h-8 w-8 text-primary" />
+                     <span className="font-headline text-2xl font-bold">Tech Lab</span>
                 </Link>
                 {navLinks.map((link) => (
                     <Link
@@ -78,7 +79,7 @@ export function Navbar() {
                  <div className="border-t pt-4">
                     {loading ? null : isAuthenticated ? (
                         <div className="flex flex-col space-y-2">
-                            <Button variant="outline" asChild><Link href="/dashboard">Dashboard</Link></Button>
+                            <Button variant="outline" asChild><Link href="/flow">Dashboard</Link></Button>
                             <UserNav />
                         </div>
                     ) : (

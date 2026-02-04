@@ -1,24 +1,16 @@
 package auth
 
 import (
-	"fmt"
+	"context"
 	"net/http"
-	"os"
 	"strings"
-	"time"
+	"techlab/backend-go/internal/users"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
-// AuthRequired is a middleware to protect routes that require a valid JWT.
-func AuthRequired() gin.HandlerFunc {
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		// This should cause a panic on startup if not set, but as a safeguard...
-		panic("JWT_SECRET environment variable not set")
-	}
-
+// AuthRequired is a middleware to protect routes that require a valid Firebase JWT.
+func AuthRequired(userRepo users.Repository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -32,67 +24,38 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		tokenString := parts[1]
+		idToken := parts[1]
 
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte(jwtSecret), nil
-		})
-
+		// Validate the Firebase ID token
+		token, err := ValidateFirebaseToken(context.Background(), idToken)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token: " + err.Error()})
 			return
 		}
 
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			// Check token expiration
-			if exp, ok := claims["exp"].(float64); ok {
-				if int64(exp) < time.Now().Unix() {
-					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token is expired"})
-					return
-				}
-			} else {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
-				return
-			}
-
-			// Set user context, e.g., user ID and role
-			c.Set("userID", claims["sub"])
-			c.Set("userName", claims["nome"])
-			c.Set("userEmail", claims["email"])
-			c.Set("userRole", claims["role"])
-			c.Next()
-		} else {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-		}
-	}
-}
-
-// RequireRole is a middleware to check for specific user roles.
-// It must be used AFTER AuthRequired().
-func RequireRole(roles ...string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userRole, exists := c.Get("userRole")
-		if !exists {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Role not found in token"})
-			return
-		}
-
-		role, ok := userRole.(string)
+		claims, ok := token.Claims.(map[string]interface{})
 		if !ok {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Invalid role format in token"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
 			return
 		}
 
-		for _, r := range roles {
-			if role == r {
-				c.Next()
-				return
+		// Set Firebase claims in context for handlers that need them (like user registration)
+		c.Set("firebase_uid", claims["user_id"])
+		c.Set("firebase_email", claims["email"])
+
+		// For existing routes, resolve the internal user and set their ID in the context
+		email, _ := claims["email"].(string)
+		if email != "" {
+			user, err := userRepo.FindByEmail(email)
+			// If the user exists in our DB, set their internal context for other handlers.
+			if err == nil && user != nil {
+				c.Set("userID", user.ID)
+				c.Set("userName", user.Nome)
+				c.Set("userEmail", user.Email)
+				c.Set("userRole", user.Role)
 			}
 		}
 
-		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "You do not have permission to access this resource"})
+		c.Next()
 	}
 }

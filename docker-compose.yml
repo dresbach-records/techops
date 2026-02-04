@@ -18,6 +18,13 @@ services:
     environment:
       # This URL points to Nginx, which will proxy requests to the correct backend.
       - NEXT_PUBLIC_API_URL=http://localhost/v1
+      # Add your Firebase client-side config here
+      - NEXT_PUBLIC_FIREBASE_API_KEY=YOUR_API_KEY
+      - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=YOUR_AUTH_DOMAIN
+      - NEXT_PUBLIC_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID
+      - NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=YOUR_STORAGE_BUCKET
+      - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=YOUR_MESSAGING_SENDER_ID
+      - NEXT_PUBLIC_FIREBASE_APP_ID=YOUR_APP_ID
     restart: unless-stopped
 
   api:
@@ -26,6 +33,9 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./Back-end/.env
+    environment:
+      # Add your Firebase Project ID for backend token validation
+      - FIREBASE_PROJECT_ID=YOUR_PROJECT_ID
     restart: unless-stopped
 
   bot:

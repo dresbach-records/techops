@@ -9,11 +9,9 @@ import (
 	"os"
 	"techlab/backend-go/internal/auth"
 	"techlab/backend-go/internal/diagnostico"
-	"techlab/backend-go/internal/email"
 	"techlab/backend-go/internal/pagamento"
 	"techlab/backend-go/internal/painel"
 	"techlab/backend-go/internal/users"
-	"techlab/backend-go/internal/whatsapp"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -27,46 +25,36 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		c.Header("X-Content-Type-Options", "nosniff")
 		c.Header("X-Frame-Options", "DENY")
 		c.Header("Referrer-Policy", "no-referrer")
-		// In a production environment, you would also set a strict Content-Security-Policy.
-		// c.Header("Content-Security-Policy", "default-src 'self'")
 		c.Next()
 	}
 }
 
 // RateLimitMiddleware is a placeholder for a request limiting middleware.
-// In a real production environment, use a library like 'tollbooth' with a Redis store.
 func RateLimitMiddleware(limit int, window time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Placeholder: In a real app, implement IP-based rate limiting here.
-		// For example, using an in-memory map with a mutex or a Redis-backed solution.
-		// log.Printf("DEBUG: Rate limit check for IP: %s", c.ClientIP())
 		c.Next()
 	}
 }
 
 // NewServer creates and configures a new Gin server.
 func NewServer(db *sql.DB) *gin.Engine {
-	// Set Gin to release mode for production, or debug mode.
 	if gin.Mode() == gin.ReleaseMode {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	router := gin.New()
 
-	// Middlewares - Order is important: RequestID -> Logger -> Recovery -> Security
 	router.Use(RequestIDMiddleware())
 	router.Use(LoggerMiddleware())
 	router.Use(gin.Recovery())
 	router.Use(SecurityHeadersMiddleware())
 
-	// CORS configuration
-	// Allow only the specific frontend URL.
 	frontendURL := os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
-		frontendURL = "http://localhost:9002" // Default for local dev
+		frontendURL = "http://localhost:9002"
 	}
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{frontendURL},
+		AllowOrigins:     []string{frontendURL, "http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-Request-ID", "Asaas-Webhook-Token"},
 		ExposeHeaders:    []string{"Content-Length", "X-Request-ID"},
@@ -74,45 +62,22 @@ func NewServer(db *sql.DB) *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
 		healthStatus := gin.H{
 			"api":       "ok",
 			"db":        "ok",
-			"ia":        "ok", // Mocked status, in a real scenario this would ping the AI service
 			"timestamp": time.Now().UTC().Format(time.RFC3339),
 		}
 		status := http.StatusOK
-
-		// Check database connection
 		if err := db.Ping(); err != nil {
 			log.Printf("ERROR: Healthcheck DB ping failed: %v", err)
 			healthStatus["db"] = "down"
 			status = http.StatusInternalServerError
 		}
-
 		c.JSON(status, healthStatus)
 	})
 
-	// Basic metrics endpoint (placeholder)
-	router.GET("/metrics", func(c *gin.Context) {
-		// In a real app, this would be populated from a metrics collector (e.g., Prometheus client)
-		c.JSON(http.StatusOK, gin.H{
-			"requests_total": gin.H{
-				"/auth/login": 1024,
-				"/health":     5120,
-			},
-			"errors_5xx_total": 15,
-			"avg_response_ms":  78,
-		})
-	})
-
-	// Rate Limiter
-	rateLimiter := RateLimitMiddleware(20, time.Minute) // 20 requests per minute
-
-	// Webhook endpoints for WhatsApp - apply rate limiting
-	router.GET("/webhooks/whatsapp", whatsapp.VerifyWebhook)
-	router.POST("/webhooks/whatsapp", rateLimiter, whatsapp.ReceiveWebhook)
+	rateLimiter := RateLimitMiddleware(100, time.Minute)
 
 	// Initialize repositories
 	userRepo := users.NewRepository(db)
@@ -127,35 +92,26 @@ func NewServer(db *sql.DB) *gin.Engine {
 	painelSvc := painel.NewService(painelRepo, userRepo)
 	diagSvc := diagnostico.NewService()
 	pagamentoSvc := pagamento.NewService(pagamentoRepo, userRepo)
+	userSvc := users.NewService(userRepo)
 
 	// Initialize handlers
-	authHandler := auth.NewHandler(authSvc)
-	usersHandler := users.NewHandler(userRepo)
+	usersHandler := users.NewHandler(userSvc)
 	painelHandler := painel.NewHandler(painelSvc)
 	diagHandler := diagnostico.NewHandler(diagSvc)
 	pagamentoHandler := pagamento.NewHandler(pagamentoSvc)
 
-	// API versioning group
 	v1 := router.Group("/v1")
 	{
-		// Public auth routes
-		authRoutes := v1.Group("/auth")
-		{
-			authRoutes.POST("/register", rateLimiter, authHandler.Register)
-			authRoutes.POST("/login", rateLimiter, authHandler.Login)
-		}
-
-		// Public webhook routes
+		// Public webhook and donation routes
 		v1.POST("/webhooks/asaas/payment", rateLimiter, pagamentoHandler.AsaasWebhookHandler)
-
-		// Public donations route
 		v1.GET("/donations", pagamentoHandler.GetDonationsHandler)
 
 		// Authenticated routes
 		api := v1.Group("/")
-		api.Use(auth.AuthRequired())
+		api.Use(auth.AuthRequired(userRepo))
 		{
-			// User
+			// User registration and profile
+			api.POST("/users/register", usersHandler.Register)
 			api.GET("/users/me", usersHandler.GetMe)
 
 			// Painel
@@ -163,11 +119,9 @@ func NewServer(db *sql.DB) *gin.Engine {
 
 			// Diagnostico
 			api.GET("/diagnostico/resultado", diagHandler.GetResultadoHandler)
-			// TODO: Add POST /diagnostico/start and PATCH /diagnostico/step
 
 			// Pagamento
 			api.POST("/pagamentos/create", pagamentoHandler.CreatePaymentHandler)
-			// TODO: Add GET /pagamentos/status
 		}
 	}
 
@@ -188,7 +142,7 @@ func RequestIDMiddleware() gin.HandlerFunc {
 func LoggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
-		c.Next() // Process request
+		c.Next()
 
 		latency := time.Since(start)
 		status := c.Writer.Status()
@@ -221,7 +175,6 @@ func LoggerMiddleware() gin.HandlerFunc {
 
 		logJSON, err := json.Marshal(logMap)
 		if err != nil {
-			// Fallback if JSON marshaling fails
 			fmt.Fprintf(os.Stdout, "[LOGGER_ERROR] Failed to marshal log: %v\n", err)
 		} else {
 			fmt.Fprintln(os.Stdout, string(logJSON))

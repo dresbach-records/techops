@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { Rocket } from "lucide-react";
 import { DiagnosticProvider } from "@/contexts/DiagnosticContext";
 
 const totalSteps = 10;
@@ -30,14 +30,15 @@ function DiagnosticLayoutContent({ children }: { children: ReactNode }) {
 
     return (
         <div className="flex min-h-screen w-full flex-col items-center bg-gray-50 font-body text-foreground">
-            <header className="w-full max-w-5xl px-4 py-6">
-                <Link href="/">
-                   <Image src="/logotech.png" alt="Tech Lab Logo" width={500} height={500} className="size-20" />
+            <header className="w-full max-w-5xl px-4 py-4 flex justify-center md:justify-start">
+                <Link href="/" className="flex items-center gap-2">
+                   <Rocket className="h-8 w-8 text-primary" />
+                   <span className="font-headline text-2xl font-bold">Tech Lab</span>
                 </Link>
             </header>
             <main className="flex w-full flex-1 items-center justify-center p-4">
                 <div className="w-full max-w-xl">
-                    {currentStep > 0 && (
+                    {currentStep > 0 && currentStep <= totalSteps && (
                         <div className="mb-8">
                             <p className="text-center text-sm text-muted-foreground mb-2">
                                 Passo {currentStep} de {totalSteps}
