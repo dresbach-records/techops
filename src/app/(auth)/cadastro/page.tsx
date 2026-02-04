@@ -23,8 +23,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Rocket } from "lucide-react";
+import { Rocket, AlertTriangle } from "lucide-react";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -36,7 +37,7 @@ const signupSchema = z.object({
 });
 
 export default function SignupPage() {
-  const { signUp } = useAuth();
+  const { signUp, isFirebaseConfigured } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -70,6 +71,8 @@ export default function SignupPage() {
     }
   }
 
+  const isFormDisabled = isLoading || !isFirebaseConfigured;
+
   return (
     <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
       <div className="hidden bg-muted lg:block relative">
@@ -98,48 +101,59 @@ export default function SignupPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {!isFirebaseConfigured && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Configuração Incompleta</AlertTitle>
+                  <AlertDescription>
+                    O Firebase não está configurado. Adicione as variáveis de ambiente para habilitar o cadastro.
+                  </AlertDescription>
+                </Alert>
+            )}
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome Completo</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Seu nome" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>E-mail</FormLabel>
-                      <FormControl>
-                        <Input placeholder="seu@email.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Senha</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <fieldset disabled={isFormDisabled} className="grid gap-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nome Completo</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Seu nome" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>E-mail</FormLabel>
+                          <FormControl>
+                            <Input placeholder="seu@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Senha</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                </fieldset>
+                <Button type="submit" className="w-full" disabled={isFormDisabled}>
                   {isLoading ? 'Criando conta...' : 'Criar Conta'}
                 </Button>
               </form>

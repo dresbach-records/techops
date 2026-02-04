@@ -4,17 +4,16 @@ import type { UserMeResponse } from "@/types/user";
 import type { DiagnosticoResultadoResponse } from "@/types/plano";
 import type { CriarPagamentoRequest, CriarPagamentoResponse, AnonymizedDonation } from "@/types/pagamento";
 import type { PainelResponse } from "@/types/painel";
-import { auth } from "./firebase";
+import { auth, isFirebaseConfigured } from "./firebase";
 
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1';
 
 async function getAuthToken(): Promise<string> {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-        throw new Error('User not authenticated.');
+    if (!isFirebaseConfigured || !auth?.currentUser) {
+        throw new Error('User not authenticated or Firebase not configured.');
     }
-    return currentUser.getIdToken();
+    return auth.currentUser.getIdToken();
 }
 
 async function handleResponse(response: Response) {

@@ -1,6 +1,6 @@
 // src/lib/firebase.ts
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,8 +11,28 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let isFirebaseConfigured = false;
 
-export { app, auth };
+// Check if all required Firebase config values are present and not placeholders
+const hasValidConfig =
+  firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY" &&
+  firebaseConfig.authDomain &&
+  firebaseConfig.projectId;
+
+if (hasValidConfig) {
+  try {
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+    isFirebaseConfigured = true;
+  } catch (error) {
+    console.error("Firebase initialization failed:", error);
+    // App remains uninitialized, isFirebaseConfigured remains false
+  }
+} else {
+  // This warning will be visible in the server logs during build and in the browser console.
+  console.warn("Firebase config is missing or incomplete. Authentication features will be disabled.");
+}
+
+export { app, auth, isFirebaseConfigured };

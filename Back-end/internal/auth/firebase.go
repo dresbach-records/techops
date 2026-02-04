@@ -3,9 +3,10 @@ package auth
 import (
 	"context"
 	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
-	"math/big"
 	"net/http"
 	"os"
 	"sync"
@@ -24,7 +25,7 @@ var (
 	keysLastUpdate time.Time
 )
 
-// fetchPublicKeys retrieves Google's public keys for verifying Firebase ID tokens.
+// fetchPublicKeys retrieves and parses Google's public keys for verifying Firebase ID tokens.
 func fetchPublicKeys() (map[string]*rsa.PublicKey, error) {
 	resp, err := http.Get(googlePublicKeysURL)
 	if err != nil {
@@ -41,32 +42,35 @@ func fetchPublicKeys() (map[string]*rsa.PublicKey, error) {
 		return nil, err
 	}
 
-	// This part is complex because we need to parse the PEM certificate
-	// For simplicity in this context, we will focus on the JWT parsing aspect.
-	// A production implementation would need to parse the x509 certificates.
-	// For now, we will return a placeholder and focus on the structure.
-	// In a real scenario, a library like `firebase.google.com/go/auth` handles this.
-	// Let's simulate parsing to get the structure right.
-
 	parsedKeys := make(map[string]*rsa.PublicKey)
-	// This is a simplified stand-in for parsing the actual certificate data.
-	// The `jwt` library needs an `*rsa.PublicKey`.
-	// We'll skip the actual crypto conversion as it's too complex to generate reliably.
-	// The key validation will be structurally correct but won't cryptographically work
-	// without the full parsing logic.
+	for kid, certPEM := range keys {
+		block, _ := pem.Decode([]byte(certPEM))
+		if block == nil {
+			return nil, fmt.Errorf("failed to decode PEM block for kid: %s", kid)
+		}
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse certificate for kid %s: %w", kid, err)
+		}
+		rsaPubKey, ok := cert.PublicKey.(*rsa.PublicKey)
+		if !ok {
+			return nil, fmt.Errorf("public key for kid %s is not an RSA key", kid)
+		}
+		parsedKeys[kid] = rsaPubKey
+	}
 
 	return parsedKeys, nil
 }
 
-// getKey returns a public key for a given key ID (kid).
+// getKey returns a public key for a given key ID (kid), fetching and caching as needed.
 func getKey(kid string) (*rsa.PublicKey, error) {
 	mu.RLock()
-	// Refresh keys every hour
+	// Refresh keys every hour to handle key rotation
 	if time.Since(keysLastUpdate) > time.Hour {
-		mu.RUnlock() // unlock for writing
+		mu.RUnlock() // Unlock for writing
 		mu.Lock()
 		defer mu.Unlock()
-		// Recheck after getting write lock
+		// Recheck condition after acquiring write lock
 		if time.Since(keysLastUpdate) > time.Hour {
 			keys, err := fetchPublicKeys()
 			if err != nil {
@@ -75,7 +79,6 @@ func getKey(kid string) (*rsa.PublicKey, error) {
 			publicKeys = keys
 			keysLastUpdate = time.Now()
 		}
-
 	} else {
 		defer mu.RUnlock()
 	}
@@ -87,56 +90,57 @@ func getKey(kid string) (*rsa.PublicKey, error) {
 	return key, nil
 }
 
-// ValidateFirebaseToken parses and validates a Firebase ID token.
+// ValidateFirebaseToken parses and validates a Firebase ID token, including cryptographic signature.
 func ValidateFirebaseToken(ctx context.Context, idToken string) (*jwt.Token, error) {
 	projectID := os.Getenv("FIREBASE_PROJECT_ID")
 	if projectID == "" {
 		return nil, fmt.Errorf("FIREBASE_PROJECT_ID environment variable not set")
 	}
 
-	// Because fetching and parsing RSA keys from the certificates is too complex to generate,
-	// we will perform claim validation only. This is NOT secure for production,
-	// but it implements the requested logic flow.
-	// A real implementation would use the Admin SDK or a full crypto library.
-	
-	token, _, err := new(jwt.Parser).ParseUnverified(idToken, jwt.MapClaims{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse token: %w", err)
+	keyFunc := func(token *jwt.Token) (interface{}, error) {
+		kid, ok := token.Header["kid"].(string)
+		if !ok {
+			return nil, fmt.Errorf("kid header not found in token")
+		}
+		// getKey fetches and caches the public keys from Google's endpoint
+		return getKey(kid)
 	}
-	
-	// Claim validation
+
+	// Parse and validate the token signature.
+	token, err := jwt.Parse(idToken, keyFunc)
+	if err != nil {
+		return nil, fmt.Errorf("token validation failed: %w", err)
+	}
+
+	if !token.Valid {
+		return nil, fmt.Errorf("token is invalid")
+	}
+
+	// Additionally, validate standard claims for Firebase tokens.
 	issuer := "https://securetoken.google.com/" + projectID
-	
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, fmt.Errorf("invalid token claims")
+	}
+
 	if err := jwt.NewValidator(
 		jwt.WithIssuer(issuer),
 		jwt.WithAudience(projectID),
 		jwt.WithLeeway(5*time.Second),
-	).Validate(token.Claims); err != nil {
+	).Validate(claims); err != nil {
 		return nil, fmt.Errorf("token claim validation failed: %w", err)
 	}
 
-	authTime, err := token.Claims.GetAuthTime()
-	if err != nil || time.Since(authTime.Time) > time.Hour*24*14 { // Example: max age 14 days
-		return nil, fmt.Errorf("token is too old")
+	authTime, err := claims.GetAuthTime()
+	if err != nil || authTime == nil || time.Since(authTime.Time) > time.Hour*24*14 { // Example: max age 14 days
+		return nil, fmt.Errorf("token is too old or auth_time claim is missing")
 	}
-	
-	// In a real scenario, we would use the keyFunc below with jwt.Parse
-	// to verify the signature cryptographically.
+
+	// Subject claim must exist for a valid Firebase token.
+	if _, err := claims.GetSubject(); err != nil {
+		return nil, fmt.Errorf("subject (sub) claim is missing")
+	}
+
 	return token, nil
-}
-
-// keyFunc is the function that the jwt-go library uses to look up the public key.
-func keyFunc(token *jwt.Token) (interface{}, error) {
-	kid, ok := token.Header["kid"].(string)
-	if !ok {
-		return nil, fmt.Errorf("kid header not found in token")
-	}
-
-	// This is a placeholder for a real public key
-	// This would normally be fetched and parsed from Google's endpoint
-	key := &rsa.PublicKey{
-		N: new(big.Int).SetBytes([]byte("... modulus ...")),
-		E: 65537,
-	}
-	return key, nil
 }

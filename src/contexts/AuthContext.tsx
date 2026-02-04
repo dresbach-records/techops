@@ -3,15 +3,16 @@
 import type { UserMeResponse } from "@/types/user";
 import { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, type User as FirebaseUser } from "firebase/auth";
+import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, type User as FirebaseUser } from "firebase/auth";
 import { registerUserProfile, getMe } from "@/lib/api";
-import { auth as firebaseAuth } from "@/lib/firebase";
+import { auth as firebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
 
 interface AuthContextType {
   user: UserMeResponse | null;
   firebaseUser: FirebaseUser | null;
   isAuthenticated: boolean;
   loading: boolean;
+  isFirebaseConfigured: boolean;
   login: (email: string, password: string) => Promise<void>;
   signUp: (name: string, email: string, password: string) => Promise<UserMeResponse>;
   logout: () => void;
@@ -46,16 +47,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!isFirebaseConfigured || !firebaseAuth) {
+      setLoading(false);
+      return; // Do nothing if Firebase is not configured
+    }
     const unsubscribe = onAuthStateChanged(firebaseAuth, handleAuthChange);
     return () => unsubscribe();
   }, [handleAuthChange]);
 
   const login = async (email: string, password: string) => {
+    if (!isFirebaseConfigured || !firebaseAuth) {
+      throw new Error("Firebase não está configurado. O login está desativado.");
+    }
     await signInWithEmailAndPassword(firebaseAuth, email, password);
     // onAuthStateChanged will handle the rest
   };
 
   const signUp = async (name: string, email: string, password: string) => {
+    if (!isFirebaseConfigured || !firebaseAuth) {
+        throw new Error("Firebase não está configurado. O cadastro está desativado.");
+    }
     const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
     if (userCredential.user) {
         // After creating the user in Firebase, create the profile in our backend.
@@ -68,13 +79,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = useCallback(async () => {
-    await signOut(firebaseAuth);
+    if (isFirebaseConfigured && firebaseAuth) {
+      await signOut(firebaseAuth);
+    }
     setUser(null);
     setFirebaseUser(null);
     router.push("/");
   }, [router]);
   
-  const isAuthenticated = !!firebaseUser && !!user;
+  const isAuthenticated = !!firebaseUser && !!user && isFirebaseConfigured;
   
   return (
     <AuthContext.Provider
@@ -83,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         firebaseUser,
         isAuthenticated,
         loading,
+        isFirebaseConfigured,
         login,
         signUp,
         logout,
