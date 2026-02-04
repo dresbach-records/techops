@@ -2,9 +2,15 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import dynamic from "next/dynamic";
 
-// O componente de gráfico foi desativado temporariamente para resolver um erro de build.
-// A reintrodução será feita de forma segura (SSR: false) após a validação.
+const FinanceiroMrrChart = dynamic(
+    () => import('@/components/charts/FinanceiroMrrChart').then(mod => mod.FinanceiroMrrChart),
+    { 
+        ssr: false,
+        loading: () => <Skeleton className="h-[300px] w-full" />
+    }
+);
 
 export default function FinanceiroPage() {
   return (
@@ -48,8 +54,7 @@ export default function FinanceiroPage() {
             </div>
              <div>
                 <h3 className="text-xl font-semibold mb-4">Evolução do MRR</h3>
-                 <Skeleton className="h-[300px] w-full" />
-                 <p className="text-center text-xs text-muted-foreground mt-2">Gráfico temporariamente desativado para corrigir erro de build.</p>
+                 <FinanceiroMrrChart />
             </div>
         </CardContent>
       </Card>
